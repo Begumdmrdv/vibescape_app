@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:vibescape_app/screens/favorites_screen.dart';
-import 'package:vibescape_app/screens/profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

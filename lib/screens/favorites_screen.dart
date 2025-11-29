@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:vibescape_app/screens/profile_screen.dart';
+import 'package:vibescape_app/screens/map_screen.dart';
+import 'package:vibescape_app/screens/mood_screen.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
@@ -77,6 +78,12 @@ class _VibeBottomNavBar extends StatelessWidget {
             child: InkWell(
               onTap: () {
                 // TODO: Home'a git
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MoodScreen(),
+                  ),
+                );
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -97,6 +104,12 @@ class _VibeBottomNavBar extends StatelessWidget {
             child: InkWell(
               onTap: () {
                 // TODO: Plans'e git
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MapScreen(),
+                  ),
+                );
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
