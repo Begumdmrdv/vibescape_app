@@ -23,10 +23,11 @@ class LoginScreen extends StatelessWidget {
                   const Text(
                     'VIBESCAPE',
                     style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w800,
                       color: Colors.white,
-                      letterSpacing: 4,
+                      letterSpacing: 6,
+                      fontFamily: 'Playfair Display Sc'
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -55,9 +56,11 @@ class LoginScreen extends StatelessWidget {
                   const Text(
                     'YOUR EMOTIONS, YOUR DESTINATIONS!',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 1.5,
+                      fontFamily: 'Playfair Display Sc',
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -99,13 +102,19 @@ class LoginScreen extends StatelessWidget {
                     children: const [
                       Text(
                         "Don't have an account? ",
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontFamily: 'Playfair Display',
+                        ),
                       ),
                       Text(
                         "Sign up",
                         style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          fontFamily: 'Playfair Display',
+                          fontWeight: FontWeight.w600,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -137,7 +146,7 @@ class _VibeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: 50,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
@@ -156,8 +165,10 @@ class _VibeButton extends StatelessWidget {
             Text(
               text,
               style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.5,
+                  fontFamily: 'Playfair Display',
               ),
             ),
           ],
