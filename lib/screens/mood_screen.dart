@@ -20,13 +20,146 @@ class MoodScreen extends StatelessWidget {
         centerTitle: true,
         title: const Text(
           'HOW ARE YOU FEELING TODAY?',
-          style: TextStyle(fontSize: 14),
+          style: TextStyle(
+            fontSize: 14,
+            fontFamily: 'Times New Roman',
+            color: Colors.white,
+          ),
         ),
       ),
-      body: const Center(
-        child: Text(
-          'Mood screen here',
-          style: TextStyle(color: Colors.white),
+
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 16),
+
+            Wrap(
+              spacing: 24,
+              runSpacing: 24,
+              alignment: WrapAlignment.center,
+              children: [
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MapScreen(mood: 'Happy'),
+                      ),
+                    );
+                  },
+                  child: _MoodItem(label: 'Happy', icon: Icons.sentiment_satisfied_alt),
+                ),
+
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MapScreen(mood: 'Energetic'),
+                      ),
+                    );
+                  },
+                  child: _MoodItem(label: 'Energetic', icon: Icons.bolt),
+                ),
+
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MapScreen(mood: 'Relaxed'),
+                      ),
+                    );
+                  },
+                  child: _MoodItem(label: 'Relaxed', icon: Icons.self_improvement),
+                ),
+
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MapScreen(mood: 'Romantic'),
+                      ),
+                    );
+                  },
+                  child: _MoodItem(label: 'Romantic', icon: Icons.favorite),
+                ),
+
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MapScreen(mood: 'Adventurous'),
+                      ),
+                    );
+                  },
+                  child: _MoodItem(label: 'Adventurous', icon: Icons.terrain),
+                ),
+
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MapScreen(mood: 'Curious'),
+                      ),
+                    );
+                  },
+                  child: _MoodItem(label: 'Curious', icon: Icons.travel_explore),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF4EEDF),
+                  foregroundColor: const Color(0xFF0D4F8B),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                onPressed: () {
+                  const moods = [
+                    'Happy',
+                    'Energetic',
+                    'Relaxed',
+                    'Romantic',
+                    'Adventurous',
+                    'Curious',
+                  ];
+
+                  final millis = DateTime.now().millisecondsSinceEpoch;
+                  final index = millis % moods.length;
+                  final randomMood = moods[index];
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MapScreen(mood: randomMood),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Pick Random',
+                  style: TextStyle(
+                    fontFamily: 'Times New Roman',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
 
@@ -36,7 +169,55 @@ class MoodScreen extends StatelessWidget {
           selectedIndex: 0,
         ),
       ),
+    );
+  }
+}
 
+class _MoodItem extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _MoodItem({
+    super.key,
+    required this.label,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const cream = Color(0xFFF4EEDF);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: cream,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.center,
+          child: CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.white,
+            child: Icon(
+              icon,
+              color: Colors.black87,
+              size: 28,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontFamily: 'Times New Roman',
+          ),
+        ),
+      ],
     );
   }
 }
@@ -63,7 +244,7 @@ class _VibeBottomNavBar extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: primaryBlue,
-        border: const Border(
+        border: Border(
           top: BorderSide(
             color: Colors.white,
             width: 2,
@@ -77,7 +258,6 @@ class _VibeBottomNavBar extends StatelessWidget {
           Expanded(
             child: InkWell(
               onTap: () {
-                // TODO: Home'a git
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -99,11 +279,9 @@ class _VibeBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-
           Expanded(
             child: InkWell(
               onTap: () {
-                // TODO: Plans'e git
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -129,11 +307,9 @@ class _VibeBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-
           Expanded(
             child: InkWell(
               onTap: () {
-                // TODO: Favorites'a git
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -155,11 +331,9 @@ class _VibeBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-
           Expanded(
             child: InkWell(
               onTap: () {
-                // TODO: Profile’a git
                 Navigator.push(
                   context,
                   MaterialPageRoute(
