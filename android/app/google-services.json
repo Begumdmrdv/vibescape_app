@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "617821993230",
+    "project_id": "vibescape-872af",
+    "storage_bucket": "vibescape-872af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:617821993230:android:02d0bac991858496453f5f",
+        "android_client_info": {
+          "package_name": "com.example.vibescape_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABNrIQhs9CWW51jwf9R1Ofa8IoITyCmtM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
