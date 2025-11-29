@@ -3,9 +3,13 @@ import 'package:vibescape_app/screens/profile_screen.dart';
 import 'package:vibescape_app/screens/mood_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 
-
 class MapScreen extends StatelessWidget {
-  const MapScreen({super.key});
+  final String? mood; // 👈 opsiyonel mood
+
+  const MapScreen({
+    super.key,
+    this.mood,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,25 +23,30 @@ class MapScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
-        title: const Text(
-          'MAP',
-          style: TextStyle(fontSize: 14),
+        title: Text(
+          (mood ?? 'MAP').toUpperCase(), // 👈 mood varsa onu, yoksa MAP
+          style: const TextStyle(
+            fontSize: 14,
+            fontFamily: 'Times New Roman',
+            color: Colors.white,
+          ),
         ),
       ),
       body: const Center(
         child: Text(
           'MAP screen here',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'Times New Roman',
+          ),
         ),
       ),
-
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: const _VibeBottomNavBar(
+      bottomNavigationBar: const Padding(
+        padding: EdgeInsets.only(bottom: 10),
+        child: _VibeBottomNavBar(
           selectedIndex: 0,
         ),
       ),
-
     );
   }
 }
@@ -126,7 +135,7 @@ class _VibeBottomNavBar extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ),
-            )
+            ),
           ),
         ],
       ),
