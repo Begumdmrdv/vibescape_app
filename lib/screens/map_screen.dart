@@ -16,8 +16,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // şimdilik sadece seçilen km'yi burada tutuyoruz
-  double _radiusKm = 15; // başlangıç: 15 km
+  double _radiusKm = 15;
 
   void _openRadiusSheet() {
     showModalBottomSheet(
@@ -57,8 +56,8 @@ class _MapScreenState extends State<MapScreen> {
                   Slider(
                     value: tempRadius,
                     min: 5,
-                    max: 50, // max 50 km
-                    divisions: 9, // 5,10,15,...,50
+                    max: 50,
+                    divisions: 9,
                     label: '${tempRadius.toStringAsFixed(0)} km',
                     onChanged: (value) {
                       setModalState(() {
@@ -124,6 +123,37 @@ class _MapScreenState extends State<MapScreen> {
             color: Colors.white,
           ),
         ),
+
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.person,
+                    size: 26,
+                    color: Color(0xFF0D4F8B),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
 
       body: Padding(
@@ -153,7 +183,7 @@ class _MapScreenState extends State<MapScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: GestureDetector(
-                onTap: _openRadiusSheet, // 👈 tıklayınca slider açılıyor
+                onTap: _openRadiusSheet, //slicer
                 child: Container(
                   width: 40,
                   height: 40,
