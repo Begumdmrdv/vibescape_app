@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import 'mood_screen.dart';
 
@@ -51,9 +52,20 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         context,
         MaterialPageRoute(builder: (_) => const MoodScreen()),
       );
+    } on FirebaseAuthException catch (e) {
+      final msg = getAuthErrorMessage(e.code);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Auth failed: $e')),
+        const SnackBar(
+          content: Text('An unknown error occurred.'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -103,5 +115,26 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         ),
       ),
     );
+  }
+}
+
+String getAuthErrorMessage(String code) {
+  switch (code) {
+    case 'invalid-email':
+      return 'Invalid email format.';
+    case 'user-disabled':
+      return 'This user account has been disabled.';
+    case 'user-not-found':
+      return 'No user found with this email.';
+    case 'wrong-password':
+      return 'Incorrect password. Please try again.';
+    case 'email-already-in-use':
+      return 'An account already exists with this email.';
+    case 'weak-password':
+      return 'Password is too weak. Please choose a stronger one.';
+    case 'operation-not-allowed':
+      return 'Email/Password sign-in is not enabled.';
+    default:
+      return 'An error occurred. Please try again.';
   }
 }
