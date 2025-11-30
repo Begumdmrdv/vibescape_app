@@ -73,46 +73,17 @@ class LoginScreen extends StatelessWidget {
                   _VibeButton(
                     icon: Icons.g_mobiledata,
                     text: 'Continue with Google',
-                    onTap: () {
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MoodScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  _VibeButton(
-                    icon: Icons.mail_outline,
-                    text: 'Sign in with Email',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MoodScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  _VibeButton(
-                    icon: Icons.g_mobiledata,
-                    text: 'Continue with Google',
                     onTap: () async {
-                      final user = await authService.signInWithGoogle();
-                      if (user != null && context.mounted) {
+                      final user = await AuthService().signInWithGoogle();
+
+                      if (user != null) {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => const MoodScreen()),
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Google sign in failed')),
+                          const SnackBar(content: Text('Google sign-in failed')),
                         );
                       }
                     },
@@ -124,17 +95,15 @@ class LoginScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const EmailAuthScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const EmailAuthScreen()),
                       );
                     },
                   ),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         "Don't have an account? ",
                         style: TextStyle(
                           color: Colors.white70,
@@ -142,18 +111,29 @@ class LoginScreen extends StatelessWidget {
                           fontFamily: 'Playfair Display',
                         ),
                       ),
-                      Text(
-                        "Sign up",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontFamily: 'Playfair Display',
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EmailAuthScreen(), // email_auth_screen.dart
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Sign up",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontFamily: 'Playfair Display',
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 24),
                 ],
               ),
