@@ -6,47 +6,52 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null;
+      final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
+      if (gUser == null) return null;
 
-      final googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication gAuth = await gUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+        accessToken: gAuth.accessToken,
+        idToken: gAuth.idToken,
       );
 
-      final userCredential = await _auth.signInWithCredential(credential);
-      return userCredential.user;
+      final userCred = await _auth.signInWithCredential(credential);
+      return userCred.user;
     } catch (e) {
-      print('Google sign in error: $e');
+      print('Google sign-in error: $e');
       return null;
     }
   }
 
   Future<User?> signInWithEmail(String email, String password) async {
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
+      final userCred = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return userCredential.user;
+      return userCred.user;
     } catch (e) {
-      print('Email sign in error: $e');
-      return null;
+      print('Email sign-in error: $e');
+      rethrow;
     }
   }
 
   Future<User?> signUpWithEmail(String email, String password) async {
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+      final userCred = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return userCredential.user;
+      return userCred.user;
     } catch (e) {
-      print('Email sign up error: $e');
-      return null;
+      print('Email sign-up error: $e');
+      rethrow;
     }
+  }
+
+  Future<void> signOut() async {
+    await _auth.signOut();
+    await GoogleSignIn().signOut();
   }
 }
