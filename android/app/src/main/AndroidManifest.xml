@@ -3,6 +3,11 @@
         android:label="vibescape_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCRWOtfsyFdobFs6h79dXyBhYb4fhoC8hc" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
