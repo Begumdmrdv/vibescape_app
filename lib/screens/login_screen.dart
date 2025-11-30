@@ -95,7 +95,7 @@ class LoginScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const EmailAuthScreen()),
+                        MaterialPageRoute(builder: (_) => const EmailAuthScreen(isLogin: true)),
                       );
                     },
                   ),
