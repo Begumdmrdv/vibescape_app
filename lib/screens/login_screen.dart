@@ -89,6 +89,8 @@ class LoginScreen extends StatelessWidget {
                     },
                   ),
 
+                  const SizedBox(height: 16),
+
                   _VibeButton(
                     icon: Icons.mail_outline,
                     text: 'Sign in with Email',
@@ -116,7 +118,7 @@ class LoginScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const EmailAuthScreen(), // email_auth_screen.dart
+                              builder: (_) => const EmailAuthScreen(isLogin: false), // email_auth_screen.dart
                             ),
                           );
                         },
