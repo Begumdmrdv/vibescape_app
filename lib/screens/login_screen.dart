@@ -42,16 +42,20 @@ class LoginScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: cardBlue,
                       borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/login_travel.png'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'Travel Image\n(sonra asset ekleyeceğiz)',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+
                   ),
 
                   const SizedBox(height: 24),
