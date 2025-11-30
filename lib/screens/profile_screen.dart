@@ -351,6 +351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.settings,
                   label: 'Settings',
                   onTap: () {},
+                  //ToDO: buraya geçmiş (geçmiş hareketler), izinler (veri, konum, güvenlik) ve şifre değiştirme kısmı mı koysak
                 ),
 
                 const Divider(color: Colors.white, thickness: 1),
