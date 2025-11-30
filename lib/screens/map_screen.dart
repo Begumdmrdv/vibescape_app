@@ -18,11 +18,9 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   double _radiusKm = 15;
 
-  // İleride 5 yıldız rating ekleyince burayı çağırırsın
+  // TODO:İleride yıldız rating ekleyince burası çağırılmalı, bunu ayarlaycağız
   void _ratePlace(int stars) {
-    if (stars == 5) {
-      visitedCount++; // ProfileScreen'deki global sayaç
-    }
+    visitedCount++;
   }
 
   void _openRadiusSheet() {

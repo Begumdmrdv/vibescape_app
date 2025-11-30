@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 // GLOBAL SAYAÇLAR
 int discoveriesCount = 0; // seçilen mekan sayısı
-int visitedCount = 0;     // 5 yıldız verilen mekan sayısı
+int visitedCount = 0;     // yıldız verilen mekan sayısı
 int myMoodsCount = 0;     // seçilen mood sayısı
 
 class ProfileScreen extends StatefulWidget {
