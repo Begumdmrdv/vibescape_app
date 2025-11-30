@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'mood_screen.dart';
+import '../services/auth_service.dart';
+import 'email_auth_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -8,6 +10,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final primaryBlue = const Color(0xFF0D4F8B);
     final cardBlue = const Color(0xFF1666B8);
+    final authService = AuthService();
 
     return Scaffold(
       backgroundColor: primaryBlue,
@@ -97,6 +100,37 @@ class LoginScreen extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
+                  _VibeButton(
+                    icon: Icons.g_mobiledata,
+                    text: 'Continue with Google',
+                    onTap: () async {
+                      final user = await authService.signInWithGoogle();
+                      if (user != null && context.mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MoodScreen()),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Google sign in failed')),
+                        );
+                      }
+                    },
+                  ),
+
+                  _VibeButton(
+                    icon: Icons.mail_outline,
+                    text: 'Sign in with Email',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EmailAuthScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
@@ -104,7 +138,7 @@ class LoginScreen extends StatelessWidget {
                         "Don't have an account? ",
                         style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 12,
+                          fontSize: 14,
                           fontFamily: 'Playfair Display',
                         ),
                       ),
@@ -112,7 +146,7 @@ class LoginScreen extends StatelessWidget {
                         "Sign up",
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 14,
                           fontFamily: 'Playfair Display',
                           fontWeight: FontWeight.w600,
                           decoration: TextDecoration.underline,
