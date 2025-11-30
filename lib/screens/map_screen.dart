@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vibescape_app/screens/profile_screen.dart';
+import 'package:vibescape_app/screens/profile_screen.dart'; // discoveriesCount / visitedCount buradan geliyor
 import 'package:vibescape_app/screens/mood_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 
@@ -17,6 +17,13 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   double _radiusKm = 15;
+
+  // İleride 5 yıldız rating ekleyince burayı çağırırsın
+  void _ratePlace(int stars) {
+    if (stars == 5) {
+      visitedCount++; // ProfileScreen'deki global sayaç
+    }
+  }
 
   void _openRadiusSheet() {
     showModalBottomSheet(
@@ -183,7 +190,7 @@ class _MapScreenState extends State<MapScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: GestureDetector(
-                onTap: _openRadiusSheet, //slicer
+                onTap: _openRadiusSheet, // slider
                 child: Container(
                   width: 40,
                   height: 40,
@@ -307,7 +314,9 @@ class _VibeBottomNavBar extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  // TODO: Save action
+                  // Kullanıcı bu ekrandaki bir mekanı seçip kaydecek
+                  discoveriesCount++; // ProfileScreen'deki global sayaç
+                  // TODO: Save action (mekanı kaydetme vs)
                 },
                 child: const Text(
                   'Save',

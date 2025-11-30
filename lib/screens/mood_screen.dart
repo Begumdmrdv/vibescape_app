@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
-import 'package:vibescape_app/screens/profile_screen.dart';
+import 'package:vibescape_app/screens/profile_screen.dart'; // myMoodsCount buradan geliyor
 import 'package:vibescape_app/screens/map_screen.dart';
 
 class MoodScreen extends StatelessWidget {
@@ -42,22 +42,29 @@ class MoodScreen extends StatelessWidget {
               children: [
                 InkWell(
                   onTap: () {
+                    myMoodsCount++; // <-- CHANGED
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MapScreen(mood: 'Happy'),
+                        builder: (context) =>
+                        const MapScreen(mood: 'Happy'),
                       ),
                     );
                   },
-                  child: _MoodItem(label: 'Happy', icon: Icons.sentiment_satisfied_alt),
+                  child: _MoodItem(
+                    label: 'Happy',
+                    icon: Icons.sentiment_satisfied_alt,
+                  ),
                 ),
 
                 InkWell(
                   onTap: () {
+                    myMoodsCount++; // <-- CHANGED
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MapScreen(mood: 'Energetic'),
+                        builder: (context) =>
+                        const MapScreen(mood: 'Energetic'),
                       ),
                     );
                   },
@@ -66,22 +73,27 @@ class MoodScreen extends StatelessWidget {
 
                 InkWell(
                   onTap: () {
+                    myMoodsCount++; // <-- CHANGED
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MapScreen(mood: 'Relaxed'),
+                        builder: (context) =>
+                        const MapScreen(mood: 'Relaxed'),
                       ),
                     );
                   },
-                  child: _MoodItem(label: 'Relaxed', icon: Icons.self_improvement),
+                  child:
+                  _MoodItem(label: 'Relaxed', icon: Icons.self_improvement),
                 ),
 
                 InkWell(
                   onTap: () {
+                    myMoodsCount++; // <-- CHANGED
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MapScreen(mood: 'Romantic'),
+                        builder: (context) =>
+                        const MapScreen(mood: 'Romantic'),
                       ),
                     );
                   },
@@ -90,10 +102,12 @@ class MoodScreen extends StatelessWidget {
 
                 InkWell(
                   onTap: () {
+                    myMoodsCount++; // <-- CHANGED
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MapScreen(mood: 'Adventurous'),
+                        builder: (context) =>
+                        const MapScreen(mood: 'Adventurous'),
                       ),
                     );
                   },
@@ -102,14 +116,17 @@ class MoodScreen extends StatelessWidget {
 
                 InkWell(
                   onTap: () {
+                    myMoodsCount++; // <-- CHANGED
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MapScreen(mood: 'Curious'),
+                        builder: (context) =>
+                        const MapScreen(mood: 'Curious'),
                       ),
                     );
                   },
-                  child: _MoodItem(label: 'Curious', icon: Icons.travel_explore),
+                  child:
+                  _MoodItem(label: 'Curious', icon: Icons.travel_explore),
                 ),
               ],
             ),
@@ -138,14 +155,18 @@ class MoodScreen extends StatelessWidget {
                     'Curious',
                   ];
 
-                  final millis = DateTime.now().millisecondsSinceEpoch;
+                  final millis =
+                      DateTime.now().millisecondsSinceEpoch;
                   final index = millis % moods.length;
                   final randomMood = moods[index];
+
+                  myMoodsCount++; // <-- CHANGED (random mood seçince de +1)
 
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => MapScreen(mood: randomMood),
+                      builder: (context) =>
+                          MapScreen(mood: randomMood),
                     ),
                   );
                 },
@@ -163,9 +184,9 @@ class MoodScreen extends StatelessWidget {
         ),
       ),
 
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: const _VibeBottomNavBar(
+      bottomNavigationBar: const Padding(
+        padding: EdgeInsets.only(bottom: 10),
+        child: _VibeBottomNavBar(
           selectedIndex: 0,
         ),
       ),
