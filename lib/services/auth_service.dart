@@ -58,8 +58,6 @@ class AuthService {
         return 'This user account has been disabled.';
       case 'user-not-found':
         return 'No user found with this email.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
       case 'email-already-in-use':
         return 'An account already exists with this email.';
       case 'weak-password':
@@ -67,7 +65,7 @@ class AuthService {
       case 'operation-not-allowed':
         return 'Email/Password sign-in is not enabled.';
       default:
-        return 'An error occurred. Please try again.';
+        return 'Email or Password is incorrect. Please try again.';
     }
   }
 
