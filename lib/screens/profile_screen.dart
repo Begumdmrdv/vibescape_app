@@ -18,6 +18,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
 
+  String _userName = 'User Name'; // editlenebilir isim
+
   Future<void> _pickImage() async {
     // İstersen burayı ImageSource.camera yapabilirsin
     final XFile? pickedFile =
@@ -28,6 +30,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _profileImage = File(pickedFile.path);
     });
+  }
+
+  void _showEditNameDialog() {
+    final controller = TextEditingController(text: _userName);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF0D4F8B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text(
+            'Edit name',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+            cursorColor: Colors.white,
+            decoration: const InputDecoration(
+              hintText: 'Enter your name',
+              hintStyle: TextStyle(color: Colors.white54),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white54),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isNotEmpty) {
+                  setState(() {
+                    _userName = text;
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Save',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -101,13 +162,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
-                const Text(
-                  'User Name',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                  ),
+                // *** EDITLENEBİLİR USER NAME ***
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _userName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: _showEditNameDialog,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white54, width: 1),
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 32),
