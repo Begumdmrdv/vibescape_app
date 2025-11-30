@@ -3,7 +3,8 @@ import '../services/auth_service.dart';
 import 'mood_screen.dart';
 
 class EmailAuthScreen extends StatefulWidget {
-  const EmailAuthScreen({super.key});
+  final bool isLogin;
+  const EmailAuthScreen({super.key, this.isLogin = true});
 
   @override
   State<EmailAuthScreen> createState() => _EmailAuthScreenState();
@@ -54,9 +55,10 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLogin = widget.isLogin;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isLogin ? 'Sign in with Email' : 'Sign up'),
+        title: Text(isLogin ? 'Login' : 'Sign up'),
         backgroundColor: const Color(0xFF0D4F8B),
       ),
       body: Padding(
