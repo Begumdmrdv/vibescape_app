@@ -50,7 +50,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                       ],
                       image: const DecorationImage(
-                        image: AssetImage('assets/images/login_travel.png'),
+                        image: AssetImage('assets/images/login_travel.jpg'),
                         fit: BoxFit.cover,
                       ),
                     ),
