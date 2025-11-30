@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:vibescape_app/screens/profile_screen.dart'; // discoveriesCount / visitedCount buradan geliyor
 import 'package:vibescape_app/screens/mood_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart'; // 👈 YENİ
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MapScreen extends StatefulWidget {
   final String? mood; // opsiyonel mood
@@ -19,14 +20,84 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   double _radiusKm = 15;
 
-  // Google Maps controller (ileride lazım olabilir)
   GoogleMapController? _mapController;
 
-  // Başlangıç kameramız (örnek: İstanbul)
+  // Kullanıcının konumu
+  LatLng? _userLocation;
+
+  // Çizilecek daire seti
+  Set<Circle> _circles = {};
+
+  // Default kamera (konum alınana kadar)
   static const CameraPosition _initialCameraPosition = CameraPosition(
     target: LatLng(41.015137, 28.979530), // Istanbul
     zoom: 12,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  // Konum izni iste + konumu al
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // GPS açık mı
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Burada istersen SnackBar vs gösterebilirsin
+      return;
+    }
+
+    // İzin durumu
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Ayarlardan açılması gerekiyor
+      return;
+    }
+
+    // Konumu al
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    final userLatLng = LatLng(position.latitude, position.longitude);
+
+    setState(() {
+      _userLocation = userLatLng;
+      _updateCircle(); // konuma göre daire oluştur
+    });
+
+    // Kamerayı kullanıcının üstüne getir
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(userLatLng, 13),
+    );
+  }
+
+  void _updateCircle() {
+    if (_userLocation == null) return;
+
+    _circles = {
+      Circle(
+        circleId: const CircleId('radius_circle'),
+        center: _userLocation!,
+        radius: _radiusKm * 1000, // km -> metre
+        fillColor: Colors.blue.withOpacity(0.2),
+        strokeColor: Colors.blueAccent,
+        strokeWidth: 2,
+      ),
+    };
+  }
 
   // TODO:İleride yıldız rating ekleyince burası çağırılmalı, bunu ayarlaycağız
   void _ratePlace(int stars) {
@@ -90,7 +161,8 @@ class _MapScreenState extends State<MapScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          _radiusKm = tempRadius; // şimdilik sadece saklıyoruz
+                          _radiusKm = tempRadius;
+                          _updateCircle(); // radius değişince daireyi güncelle
                         });
                         Navigator.pop(context);
                       },
@@ -179,7 +251,7 @@ class _MapScreenState extends State<MapScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 🔻 SADECE ŞU BLOĞU DEĞİŞTİRDİK
+            // MAP
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: SizedBox(
@@ -187,12 +259,20 @@ class _MapScreenState extends State<MapScreen> {
                 child: GoogleMap(
                   initialCameraPosition: _initialCameraPosition,
                   onMapCreated: _onMapCreated,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
+
+                  myLocationEnabled: true,      //user point
+                  myLocationButtonEnabled: true,
+
+                  zoomControlsEnabled: true,
+                  zoomGesturesEnabled: true,
+                  scrollGesturesEnabled: true,
+                  rotateGesturesEnabled: true,
+                  tiltGesturesEnabled: true,
+
+                  circles: _circles,
                 ),
               ),
             ),
-            // 🔺 Önceden burada "MAP WILL BE HERE" yazan Container vardı
 
             const SizedBox(height: 12),
 
