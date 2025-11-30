@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vibescape_app/screens/login_screen.dart'; // <-- EKLENDİ
 
 // GLOBAL SAYAÇLAR
 int discoveriesCount = 0; // seçilen mekan sayısı
@@ -82,6 +83,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               child: const Text(
                 'Save',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // SIGN OUT DİYALOĞU
+  void _showSignOutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF0D4F8B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text(
+            'Sign out',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Do you really want to sign out?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // dialogu kapat
+                // Tüm sayfaları silip LoginScreen'e dön
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LoginScreen(),
+                  ),
+                      (route) => false,
+                );
+              },
+              child: const Text(
+                'Yes',
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -239,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ProfileMenuTile(
                   icon: Icons.logout,
                   label: 'Sign Out',
-                  onTap: () {},
+                  onTap: _showSignOutDialog, // <-- BURASI DEĞİŞTİ
                 ),
 
                 const Divider(color: Colors.white, thickness: 1),
