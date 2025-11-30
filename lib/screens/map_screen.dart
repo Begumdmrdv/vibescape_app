@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vibescape_app/screens/profile_screen.dart'; // discoveriesCount / visitedCount buradan geliyor
 import 'package:vibescape_app/screens/mood_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // 👈 YENİ
 
 class MapScreen extends StatefulWidget {
   final String? mood; // opsiyonel mood
@@ -18,9 +19,22 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   double _radiusKm = 15;
 
+  // Google Maps controller (ileride lazım olabilir)
+  GoogleMapController? _mapController;
+
+  // Başlangıç kameramız (örnek: İstanbul)
+  static const CameraPosition _initialCameraPosition = CameraPosition(
+    target: LatLng(41.015137, 28.979530), // Istanbul
+    zoom: 12,
+  );
+
   // TODO:İleride yıldız rating ekleyince burası çağırılmalı, bunu ayarlaycağız
   void _ratePlace(int stars) {
     visitedCount++;
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
   }
 
   void _openRadiusSheet() {
@@ -128,7 +142,6 @@ class _MapScreenState extends State<MapScreen> {
             color: Colors.white,
           ),
         ),
-
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -166,22 +179,20 @@ class _MapScreenState extends State<MapScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // 🔻 SADECE ŞU BLOĞU DEĞİŞTİRDİK
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: Container(
+              child: SizedBox(
                 height: 220,
-                color: Colors.white24,
-                alignment: Alignment.center,
-                child: const Text(
-                  'MAP WILL BE HERE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Times New Roman',
-                    fontSize: 14,
-                  ),
+                child: GoogleMap(
+                  initialCameraPosition: _initialCameraPosition,
+                  onMapCreated: _onMapCreated,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
                 ),
               ),
             ),
+            // 🔺 Önceden burada "MAP WILL BE HERE" yazan Container vardı
 
             const SizedBox(height: 12),
 
