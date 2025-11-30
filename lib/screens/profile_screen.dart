@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:vibescape_app/screens/login_screen.dart'; // <-- EKLENDİ
+import 'package:vibescape_app/screens/login_screen.dart';
 
 // GLOBAL SAYAÇLAR
 int discoveriesCount = 0; // seçilen mekan sayısı
@@ -21,8 +21,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _userName = 'User Name'; // editlenebilir isim
 
+  // Notifications state
+  bool _appNotifications = true;
+  bool _emailNotifications = false;
+
   Future<void> _pickImage() async {
-    // İstersen burayı ImageSource.camera yapabilirsin
     final XFile? pickedFile =
     await _picker.pickImage(source: ImageSource.gallery);
 
@@ -92,6 +95,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Notifications popup
+  void _showNotificationsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF0D4F8B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text(
+            'Notifications',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(
+                  'App notifications',
+                  style: TextStyle(color: Colors.white),
+                ),
+                subtitle: const Text(
+                  'General alerts and updates',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                value: _appNotifications,
+                activeColor: Colors.white,
+                activeTrackColor: Colors.white24,
+                inactiveThumbColor: Colors.white,
+                inactiveTrackColor: Colors.white24,
+                onChanged: (val) {
+                  setState(() {
+                    _appNotifications = val;
+                  });
+                },
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(
+                  'Email notifications',
+                  style: TextStyle(color: Colors.white),
+                ),
+                subtitle: const Text(
+                  'News, tips and promotions',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                value: _emailNotifications,
+                activeColor: Colors.white,
+                activeTrackColor: Colors.white24,
+                inactiveThumbColor: Colors.white,
+                inactiveTrackColor: Colors.white24,
+                onChanged: (val) {
+                  setState(() {
+                    _emailNotifications = val;
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Close',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // SIGN OUT DİYALOĞU
   void _showSignOutDialog() {
     showDialog(
@@ -121,7 +199,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // dialogu kapat
-                // Tüm sayfaları silip LoginScreen'e dön
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
@@ -281,7 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ProfileMenuTile(
                   icon: Icons.notifications_none,
                   label: 'Notifications',
-                  onTap: () {},
+                  onTap: _showNotificationsDialog,
                 ),
 
                 const Divider(color: Colors.white, thickness: 1),
@@ -289,7 +366,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ProfileMenuTile(
                   icon: Icons.logout,
                   label: 'Sign Out',
-                  onTap: _showSignOutDialog, // <-- BURASI DEĞİŞTİ
+                  onTap: _showSignOutDialog,
                 ),
 
                 const Divider(color: Colors.white, thickness: 1),
