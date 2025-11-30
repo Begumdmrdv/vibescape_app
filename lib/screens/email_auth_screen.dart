@@ -10,48 +10,45 @@ class EmailAuthScreen extends StatefulWidget {
 }
 
 class _EmailAuthScreenState extends State<EmailAuthScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  final _authService = AuthService();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _isLogin = true;
+  bool _loading = false;
 
-  Future<void> _login() async {
-    setState(() => _isLoading = true);
-    final user = await _authService.signInWithEmail(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-    );
-    setState(() => _isLoading = false);
-
-    if (user != null && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MoodScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed')),
-      );
-    }
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
   }
 
-  Future<void> _signUp() async {
-    setState(() => _isLoading = true);
-    final user = await _authService.signUpWithEmail(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-    );
-    setState(() => _isLoading = false);
+  Future<void> _submit() async {
+    setState(() => _loading = true);
+    try {
+      final auth = AuthService();
+      if (_isLogin) {
+        await auth.signInWithEmail(
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text.trim(),
+        );
+      } else {
+        await auth.signUpWithEmail(
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text.trim(),
+        );
+      }
 
-    if (user != null && mounted) {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MoodScreen()),
       );
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sign up failed')),
+        SnackBar(content: Text('Auth failed: $e')),
       );
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -59,7 +56,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign in with Email'),
+        title: Text(_isLogin ? 'Sign in with Email' : 'Sign up'),
         backgroundColor: const Color(0xFF0D4F8B),
       ),
       body: Padding(
@@ -67,35 +64,33 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         child: Column(
           children: [
             TextField(
-              controller: _emailController,
+              controller: _emailCtrl,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             TextField(
-              controller: _passwordController,
+              controller: _passwordCtrl,
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
             const SizedBox(height: 24),
-            if (_isLoading)
+            if (_loading)
               const CircularProgressIndicator()
-            else ...[
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _login,
-                  child: const Text('Login'),
-                ),
+            else
+              ElevatedButton(
+                onPressed: _submit,
+                child: Text(_isLogin ? 'Login' : 'Sign up'),
               ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _signUp,
-                  child: const Text('Create Account'),
-                ),
+            TextButton(
+              onPressed: () {
+                setState(() => _isLogin = !_isLogin);
+              },
+              child: Text(
+                _isLogin
+                    ? "Don't have an account? Sign up"
+                    : 'Already have an account? Login',
               ),
-            ],
+            ),
           ],
         ),
       ),
