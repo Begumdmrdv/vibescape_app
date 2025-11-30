@@ -3,7 +3,7 @@ import '../services/auth_service.dart';
 import 'mood_screen.dart';
 
 class EmailAuthScreen extends StatefulWidget {
-  final bool isLogin; // başlangıç modu
+  final bool isLogin;
   const EmailAuthScreen({super.key, this.isLogin = true});
 
   @override
@@ -14,13 +14,13 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
 
-  late bool _isLogin;      // <-- late yaptık, initState'de ayarlayacağız
+  late bool _isLogin;
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _isLogin = widget.isLogin;  // <-- burası kritik
+    _isLogin = widget.isLogin;
   }
 
   @override
@@ -64,7 +64,6 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Artık widget.isLogin değil, her zaman _isLogin'i kullanıyoruz
         title: Text(_isLogin ? 'Login' : 'Sign up'),
         backgroundColor: const Color(0xFF0D4F8B),
       ),
