@@ -252,7 +252,7 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // MAP
-            ClipRRect(
+           /* ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: SizedBox(
                 height: 220,
@@ -272,7 +272,7 @@ class _MapScreenState extends State<MapScreen> {
                   circles: _circles,
                 ),
               ),
-            ),
+            ),*/
 
             const SizedBox(height: 12),
 
