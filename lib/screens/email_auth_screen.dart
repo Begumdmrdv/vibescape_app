@@ -17,6 +17,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
 
   late bool _isLogin;
   bool _loading = false;
+  bool _obscurePassword = true; // 👁 password show/hide
 
   @override
   void initState() {
@@ -72,43 +73,114 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
     }
   }
 
+  // Ortak input dekorasyonu (beyaz yazı + beyaz underline)
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white),
+      hintStyle: const TextStyle(color: Colors.white70),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white70),
+      ),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    const blue = Color(0xFF0D4F8B);
+
     return Scaffold(
+      backgroundColor: blue,
       appBar: AppBar(
-        title: Text(_isLogin ? 'Login' : 'Sign up'),
-        backgroundColor: const Color(0xFF0D4F8B),
+        backgroundColor: blue,
+        elevation: 0,
+        title: Text(
+          _isLogin ? 'Login' : 'Sign up',
+          style: const TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // EMAIL
             TextField(
               controller: _emailCtrl,
-              decoration: const InputDecoration(labelText: 'Email'),
+              style: const TextStyle(color: Colors.white),
+              cursorColor: Colors.white,
+              decoration: _inputDecoration('Email'),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+
+            // PASSWORD + SHOW / HIDE
             TextField(
               controller: _passwordCtrl,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
+              obscureText: _obscurePassword,
+              style: const TextStyle(color: Colors.white),
+              cursorColor: Colors.white,
+              decoration: _inputDecoration('Password').copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.white70,
+                  ),
+                  onPressed: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+
+            // BUTTON
             if (_loading)
-              const CircularProgressIndicator()
+              const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
             else
               ElevatedButton(
                 onPressed: _submit,
-                child: Text(_isLogin ? 'Login' : 'Sign up'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: blue,
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text(
+                  _isLogin ? 'Login' : 'Sign up',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            TextButton(
-              onPressed: () {
-                setState(() => _isLogin = !_isLogin);
-              },
-              child: Text(
-                _isLogin
-                    ? "Don't have an account? Sign up"
-                    : 'Already have an account? Login',
+
+            const SizedBox(height: 20),
+
+            // LOGIN <-> SIGNUP TOGGLE
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() => _isLogin = !_isLogin);
+                },
+                child: Text(
+                  _isLogin
+                      ? "Don't have an account? Sign up"
+                      : 'Already have an account? Login',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
               ),
             ),
           ],
