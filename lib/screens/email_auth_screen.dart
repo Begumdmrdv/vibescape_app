@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart'; //
 import '../services/auth_service.dart';
 import 'mood_screen.dart';
 
@@ -17,12 +18,13 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
 
   late bool _isLogin;
   bool _loading = false;
-  bool _obscurePassword = true; // 👁 password show/hide
+  bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
     _isLogin = widget.isLogin;
+    _loadSavedCredentials();
   }
 
   @override
@@ -30,6 +32,51 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('saved_email');
+    final savedPassword = prefs.getString('saved_password');
+
+    if (savedEmail != null && savedPassword != null) {
+      setState(() {
+        _emailCtrl.text = savedEmail;
+        _passwordCtrl.text = savedPassword;
+      });
+    }
+  }
+
+  Future<void> _saveCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('saved_email', _emailCtrl.text.trim());
+    await prefs.setString('saved_password', _passwordCtrl.text.trim());
+  }
+
+  Future<bool> _askToSaveDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Save login info?'),
+          content: const Text(
+              'Would you like to save your email and password on this device?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   Future<void> _submit() async {
@@ -46,6 +93,13 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
           _emailCtrl.text.trim(),
           _passwordCtrl.text.trim(),
         );
+      }
+
+      if (!mounted) return;
+
+      final shouldSave = await _askToSaveDialog();
+      if (shouldSave) {
+        await _saveCredentials();
       }
 
       if (!mounted) return;
@@ -73,7 +127,6 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
     }
   }
 
-  // Ortak input dekorasyonu (beyaz yazı + beyaz underline)
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -117,7 +170,6 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
             ),
             const SizedBox(height: 16),
 
-            // PASSWORD + SHOW / HIDE
             TextField(
               controller: _passwordCtrl,
               obscureText: _obscurePassword,
@@ -165,7 +217,6 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
 
             const SizedBox(height: 20),
 
-            // LOGIN <-> SIGNUP TOGGLE
             Center(
               child: GestureDetector(
                 onTap: () {
