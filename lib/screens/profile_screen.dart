@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vibescape_app/screens/login_screen.dart';
+import '../services/stats_service.dart';
 
 // GLOBAL SAYAÇLAR
 int discoveriesCount = 0; // seçilen mekan sayısı
@@ -16,6 +17,16 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+
+    discoveriesCount = StatsService.discoveriesCount;
+    visitedCount = StatsService.visitedCount;
+    myMoodsCount = StatsService.myMoodsCount;
+  }
+
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:vibescape_app/screens/profile_screen.dart'; // myMoodsCount buradan geliyor
 import 'package:vibescape_app/screens/map_screen.dart';
+import '../services/stats_service.dart';
 
 class MoodScreen extends StatelessWidget {
   const MoodScreen({super.key});
@@ -41,8 +42,9 @@ class MoodScreen extends StatelessWidget {
               alignment: WrapAlignment.center,
               children: [
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     myMoodsCount++; // <-- CHANGED
+                    await StatsService.setMyMoods(myMoodsCount);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -58,8 +60,10 @@ class MoodScreen extends StatelessWidget {
                 ),
 
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     myMoodsCount++; // <-- CHANGED
+                    await StatsService.setMyMoods(myMoodsCount);
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -72,8 +76,10 @@ class MoodScreen extends StatelessWidget {
                 ),
 
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     myMoodsCount++; // <-- CHANGED
+                    await StatsService.setMyMoods(myMoodsCount);
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -87,8 +93,10 @@ class MoodScreen extends StatelessWidget {
                 ),
 
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     myMoodsCount++; // <-- CHANGED
+                    await StatsService.setMyMoods(myMoodsCount);
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -101,8 +109,10 @@ class MoodScreen extends StatelessWidget {
                 ),
 
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     myMoodsCount++; // <-- CHANGED
+                    await StatsService.setMyMoods(myMoodsCount);
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -115,8 +125,10 @@ class MoodScreen extends StatelessWidget {
                 ),
 
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     myMoodsCount++; // <-- CHANGED
+                    await StatsService.setMyMoods(myMoodsCount);
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -145,11 +157,12 @@ class MoodScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   const moods = [
                     'Happy',
                     'Energetic',
                     'Relaxed',
+                    'Romantic',
                     'Romantic',
                     'Adventurous',
                     'Curious',
@@ -161,6 +174,7 @@ class MoodScreen extends StatelessWidget {
                   final randomMood = moods[index];
 
                   myMoodsCount++; // <-- CHANGED (random mood seçince de +1)
+                  await StatsService.setMyMoods(myMoodsCount);
 
                   Navigator.push(
                     context,
