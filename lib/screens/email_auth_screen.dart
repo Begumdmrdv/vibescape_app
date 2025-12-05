@@ -97,12 +97,17 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
 
       if (!mounted) return;
 
-      final shouldSave = await _askToSaveDialog();
-      if (shouldSave) {
-        await _saveCredentials();
+      final prefs = await SharedPreferences.getInstance();
+      final alreadySaved = prefs.getBool('login_saved') ?? false;
+
+      if (!alreadySaved) {
+        final shouldSave = await _askToSaveDialog();
+        if (shouldSave) {
+          await _saveCredentials();
+          await prefs.setBool('login_saved', true);
+        }
       }
 
-      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MoodScreen()),
