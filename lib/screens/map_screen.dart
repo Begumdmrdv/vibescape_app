@@ -301,8 +301,7 @@ class _MapScreenState extends State<MapScreen> {
             Expanded(
               child: Center(
                 child: Text(
-                  'Buraya Norfolk / Cornwall kartları,\n'
-                      'hava durumu + öneriler gelecek.\n\n'
+                  'Buraya öneriler kısmı gelecek.'
                       'Seçilen radius: ${_radiusKm.toStringAsFixed(0)} km',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
