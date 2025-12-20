@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:vibescape_app/screens/profile_screen.dart'; // discoveriesCount / visitedCount buradan geliyor
-import 'package:vibescape_app/screens/mood_screen.dart';
+import 'package:vibescape_app/screens/profile_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../models/place.dart';
+import '../services/places_api_service.dart';
+import '../utils/mood_scoring.dart';
+
 class MapScreen extends StatefulWidget {
-  final String? mood; // opsiyonel mood
+  final String? mood;
 
   const MapScreen({
     super.key,
@@ -18,21 +21,24 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  double _radiusKm = 15;
-
-  GoogleMapController? _mapController;
-
-  // Kullanıcının konumu
-  LatLng? _userLocation;
-
-  // Çizilecek daire seti
-  Set<Circle> _circles = {};
-
-  // Default kamera (konum alınana kadar)
+  final _placesApi = PlacesApiService('AIzaSyCRWOtfsyFdobFs6h79dXyBhYb4fhoC8hc');
   static const CameraPosition _initialCameraPosition = CameraPosition(
     target: LatLng(41.015137, 28.979530), // Istanbul
     zoom: 12,
   );
+
+  double _radiusKm = 15;
+  GoogleMapController? _mapController;
+
+  LatLng? _userLocation;
+  Set<Circle> _circles = {};
+  Set<Marker> _markers = {};
+
+  bool _loadingPlaces = false;
+  String? _placesError;
+
+  List<Place> _places = [];
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -40,33 +46,37 @@ class _MapScreenState extends State<MapScreen> {
     _getCurrentLocation();
   }
 
-  // Konum izni iste + konumu al
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // GPS açık mı
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Burada istersen SnackBar vs gösterebilirsin
+      setState(() {
+        _placesError = 'Location services are disabled.';
+      });
       return;
     }
 
-    // İzin durumu
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        setState(() {
+          _placesError = 'Location permission denied.';
+        });
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // Ayarlardan açılması gerekiyor
+      setState(() {
+        _placesError =
+        'Location permission denied forever. Enable it in settings.';
+      });
       return;
     }
 
-    // Konumu al
     final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
@@ -75,13 +85,14 @@ class _MapScreenState extends State<MapScreen> {
 
     setState(() {
       _userLocation = userLatLng;
-      _updateCircle(); // konuma göre daire oluştur
+      _updateCircle();
     });
 
-    // Kamerayı kullanıcının üstüne getir
     _mapController?.animateCamera(
       CameraUpdate.newLatLngZoom(userLatLng, 13),
     );
+
+    await _loadPlaces();
   }
 
   void _updateCircle() {
@@ -91,7 +102,7 @@ class _MapScreenState extends State<MapScreen> {
       Circle(
         circleId: const CircleId('radius_circle'),
         center: _userLocation!,
-        radius: _radiusKm * 1000, // km -> metre
+        radius: _radiusKm * 1000,
         fillColor: Colors.blue.withOpacity(0.2),
         strokeColor: Colors.blueAccent,
         strokeWidth: 2,
@@ -99,13 +110,121 @@ class _MapScreenState extends State<MapScreen> {
     };
   }
 
-  // TODO:İleride yıldız rating ekleyince burası çağırılmalı, bunu ayarlaycağız
-  void _ratePlace(int stars) {
-    visitedCount++;
-  }
-
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
+  }
+
+  String get _mood => widget.mood ?? 'Happy';
+
+  Future<void> _loadPlaces() async {
+    if (_userLocation == null) return;
+
+    setState(() {
+      _loadingPlaces = true;
+      _placesError = null;
+    });
+
+    try {
+      final raw = await _placesApi.nearbyAttractions(
+        lat: _userLocation!.latitude,
+        lng: _userLocation!.longitude,
+        radiusMeters: (_radiusKm * 1000).toInt(),
+      );
+
+      bool isFoodPlace(List<String> types) =>
+          types.contains('restaurant') ||
+              types.contains('cafe') ||
+              types.contains('food') ||
+              types.contains('meal_takeaway') ||
+              types.contains('meal_delivery');
+
+      final places = <Place>[];
+
+      for (final p in raw) {
+        final types = List<String>.from(p['types'] ?? []);
+
+        if (isFoodPlace(types)) continue;
+
+        final lat = p['lat'] as double;
+        final lng = p['lng'] as double;
+
+        final moodScores = computeMoodScores(
+          types: types,
+          googleRating: p['rating'] as double?,
+          userRatingsTotal: p['user_ratings_total'] as int?,
+          userLat: _userLocation!.latitude,
+          userLng: _userLocation!.longitude,
+          placeLat: lat,
+          placeLng: lng,
+          maxDistanceKm: _radiusKm,
+        );
+
+        places.add(
+          Place(
+            id: p['place_id'] as String,
+            name: p['name'] as String,
+            lat: lat,
+            lng: lng,
+            types: types,
+            address: p['vicinity'] as String?,
+            googleRating: p['rating'] as double?,
+            userRatingsTotal: p['user_ratings_total'] as int?,
+            moodScores: moodScores,
+          ),
+        );
+      }
+
+      places.sort((a, b) {
+        final sa = a.moodScores[_mood] ?? 0;
+        final sb = b.moodScores[_mood] ?? 0;
+        return sb.compareTo(sa);
+      });
+
+      final markers = <Marker>{};
+
+      for (int i = 0; i < places.length; i++) {
+        final place = places[i];
+
+        markers.add(
+          Marker(
+            markerId: MarkerId(place.id),
+            position: LatLng(place.lat, place.lng),
+            infoWindow: InfoWindow(
+              title: place.name,
+              snippet:
+              'Mood: ${(_mood)} ${(place.moodScores[_mood] ?? 0).toStringAsFixed(1)}/10',
+            ),
+            onTap: () {
+              setState(() {
+                _selectedIndex = i;
+              });
+            },
+          ),
+        );
+      }
+
+      setState(() {
+        _places = places;
+        _markers = markers;
+        _selectedIndex = 0;
+        _loadingPlaces = false;
+      });
+
+      if (_places.isNotEmpty) {
+        _focusOnPlace(_places[_selectedIndex]);
+      }
+    } catch (e) {
+      setState(() {
+        _placesError = e.toString();
+        _loadingPlaces = false;
+      });
+    }
+  }
+
+  void _focusOnPlace(Place p) {
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(LatLng(p.lat, p.lng), 14),
+    );
   }
 
   void _openRadiusSheet() {
@@ -159,18 +278,17 @@ class _MapScreenState extends State<MapScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           _radiusKm = tempRadius;
-                          _updateCircle(); // radius değişince daireyi güncelle
+                          _updateCircle();
                         });
                         Navigator.pop(context);
+                        await _loadPlaces();
                       },
                       child: const Text(
                         'Apply',
-                        style: TextStyle(
-                          fontFamily: 'Times New Roman',
-                        ),
+                        style: TextStyle(fontFamily: 'Times New Roman'),
                       ),
                     ),
                   ),
@@ -192,9 +310,33 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  void _suggestAlternative() {
+    if (_places.isEmpty) return;
+
+    setState(() {
+      _selectedIndex = (_selectedIndex + 1) % _places.length;
+    });
+
+    _focusOnPlace(_places[_selectedIndex]);
+  }
+
+  void _saveSelected() {
+    if (_places.isEmpty) return;
+
+    discoveriesCount++;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Saved: ${_places[_selectedIndex].name}'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const primaryBlue = Color(0xFF0D4F8B);
+
+    final selectedPlace =
+    _places.isEmpty ? null : _places[_selectedIndex];
 
     return Scaffold(
       backgroundColor: primaryBlue,
@@ -207,7 +349,7 @@ class _MapScreenState extends State<MapScreen> {
         ),
         centerTitle: true,
         title: Text(
-          (widget.mood ?? 'MAP').toUpperCase(),
+          (_mood).toUpperCase(),
           style: const TextStyle(
             fontSize: 14,
             fontFamily: 'Times New Roman',
@@ -252,15 +394,14 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // MAP
-           ClipRRect(
+            ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: SizedBox(
                 height: 220,
                 child: GoogleMap(
                   initialCameraPosition: _initialCameraPosition,
                   onMapCreated: _onMapCreated,
-
-                  myLocationEnabled: true,      //user point
+                  myLocationEnabled: true,
                   myLocationButtonEnabled: true,
 
                   zoomControlsEnabled: true,
@@ -270,6 +411,7 @@ class _MapScreenState extends State<MapScreen> {
                   tiltGesturesEnabled: true,
 
                   circles: _circles,
+                  markers: _markers, // ✅ yeni
                 ),
               ),
             ),
@@ -279,7 +421,7 @@ class _MapScreenState extends State<MapScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: GestureDetector(
-                onTap: _openRadiusSheet, // slider
+                onTap: _openRadiusSheet,
                 child: Container(
                   width: 40,
                   height: 40,
@@ -296,30 +438,168 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            Expanded(
-              child: Center(
-                child: Text(
-                  'Buraya öneriler kısmı gelecek.'
-                      'Seçilen radius: ${_radiusKm.toStringAsFixed(0)} km',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Times New Roman',
-                    fontSize: 14,
+            if (_loadingPlaces)
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              )
+            else if (_placesError != null)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    _placesError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'Times New Roman',
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-              ),
-            ),
+              )
+            else if (_places.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'No places found in ${_radiusKm.toStringAsFixed(0)} km.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'Times New Roman',
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: Column(
+                    children: [
+                      if (selectedPlace != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Builder(builder: (_) {
+                            final moodScore =
+                            (selectedPlace.moodScores[_mood] ?? 0)
+                                .toStringAsFixed(1);
+                            final google =
+                                selectedPlace.googleRating?.toStringAsFixed(1) ??
+                                    '-';
+                            final distKm = haversineKm(
+                              _userLocation!.latitude,
+                              _userLocation!.longitude,
+                              selectedPlace.lat,
+                              selectedPlace.lng,
+                            ).toStringAsFixed(1);
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  selectedPlace.name,
+                                  style: const TextStyle(
+                                    fontFamily: 'Times New Roman',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  selectedPlace.address ?? '',
+                                  style: const TextStyle(
+                                    fontFamily: 'Times New Roman',
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Mood score: $moodScore/10  •  Google: $google/5  •  $distKm km',
+                                  style: const TextStyle(
+                                    fontFamily: 'Times New Roman',
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
+
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _places.length,
+                          itemBuilder: (context, i) {
+                            final p = _places[i];
+                            final isSelected = i == _selectedIndex;
+                            final score =
+                            (p.moodScores[_mood] ?? 0).toStringAsFixed(1);
+
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() => _selectedIndex = i);
+                                _focusOnPlace(p);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFFF4EEDF)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: isSelected
+                                      ? Border.all(color: primaryBlue, width: 2)
+                                      : null,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        p.name,
+                                        style: const TextStyle(
+                                          fontFamily: 'Times New Roman',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      '$score/10',
+                                      style: const TextStyle(
+                                        fontFamily: 'Times New Roman',
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
           ],
         ),
       ),
 
-      bottomNavigationBar: const Padding(
-        padding: EdgeInsets.only(bottom: 10),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
         child: _VibeBottomNavBar(
           selectedIndex: 0,
+          onSuggestAlternative: _suggestAlternative,
+          onSave: _saveSelected,
         ),
       ),
     );
@@ -328,10 +608,14 @@ class _MapScreenState extends State<MapScreen> {
 
 class _VibeBottomNavBar extends StatelessWidget {
   final int selectedIndex;
+  final VoidCallback onSuggestAlternative;
+  final VoidCallback onSave;
 
   const _VibeBottomNavBar({
     super.key,
     this.selectedIndex = 0,
+    required this.onSuggestAlternative,
+    required this.onSave,
   });
 
   @override
@@ -374,9 +658,7 @@ class _VibeBottomNavBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                onPressed: () {
-                  // TODO: Suggest Alternative action
-                },
+                onPressed: onSuggestAlternative,
                 child: const Text(
                   'Suggest Alternative',
                   style: buttonTextStyle,
@@ -385,9 +667,7 @@ class _VibeBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(width: 16),
-
           Expanded(
             flex: 2,
             child: SizedBox(
@@ -401,11 +681,7 @@ class _VibeBottomNavBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                onPressed: () {
-                  // Kullanıcı bu ekrandaki bir mekanı seçip kaydecek
-                  discoveriesCount++; // ProfileScreen'deki global sayaç
-                  // TODO: Save action (mekanı kaydetme vs)
-                },
+                onPressed: onSave,
                 child: const Text(
                   'Save',
                   style: buttonTextStyle,
