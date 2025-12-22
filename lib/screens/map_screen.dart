@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:vibescape_app/screens/profile_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-
 import '../models/place.dart';
 import '../services/places_api_service.dart';
 import '../utils/mood_scoring.dart';
+import '../services/favorites_service.dart';
 
 class MapScreen extends StatefulWidget {
   final String? mood;
@@ -21,7 +22,9 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  final _placesApi = PlacesApiService('AIzaSyCRWOtfsyFdobFs6h79dXyBhYb4fhoC8hc');
+  final _placesApi =
+  PlacesApiService('AIzaSyCRWOtfsyFdobFs6h79dXyBhYb4fhoC8hc');
+
   static const CameraPosition _initialCameraPosition = CameraPosition(
     target: LatLng(41.015137, 28.979530), // Istanbul
     zoom: 12,
@@ -45,6 +48,8 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _getCurrentLocation();
   }
+
+  String get _mood => widget.mood ?? 'Happy';
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
@@ -114,8 +119,6 @@ class _MapScreenState extends State<MapScreen> {
     _mapController = controller;
   }
 
-  String get _mood => widget.mood ?? 'Happy';
-
   Future<void> _loadPlaces() async {
     if (_userLocation == null) return;
 
@@ -159,6 +162,13 @@ class _MapScreenState extends State<MapScreen> {
           maxDistanceKm: _radiusKm,
         );
 
+        final dist = haversineKm(
+          _userLocation!.latitude,
+          _userLocation!.longitude,
+          lat,
+          lng,
+        );
+
         places.add(
           Place(
             id: p['place_id'] as String,
@@ -170,6 +180,7 @@ class _MapScreenState extends State<MapScreen> {
             googleRating: p['rating'] as double?,
             userRatingsTotal: p['user_ratings_total'] as int?,
             moodScores: moodScores,
+            distanceKm: dist,
           ),
         );
       }
@@ -192,7 +203,7 @@ class _MapScreenState extends State<MapScreen> {
             infoWindow: InfoWindow(
               title: place.name,
               snippet:
-              'Mood: ${(_mood)} ${(place.moodScores[_mood] ?? 0).toStringAsFixed(1)}/10',
+              'Mood: $_mood ${(place.moodScores[_mood] ?? 0).toStringAsFixed(1)}/10',
             ),
             onTap: () {
               setState(() {
@@ -292,15 +303,6 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Current radius: ${_radiusKm.toStringAsFixed(0)} km',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontFamily: 'Times New Roman',
-                      fontSize: 12,
-                    ),
-                  ),
                 ],
               ),
             );
@@ -335,8 +337,9 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     const primaryBlue = Color(0xFF0D4F8B);
 
-    final selectedPlace =
-    _places.isEmpty ? null : _places[_selectedIndex];
+    final favorites = context.watch<FavoritesService>();
+
+    final selectedPlace = _places.isEmpty ? null : _places[_selectedIndex];
 
     return Scaffold(
       backgroundColor: primaryBlue,
@@ -357,15 +360,23 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Favorites',
+            icon: const Icon(Icons.favorite, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
+            },
+          ),
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 12.0),
             child: InkWell(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
                 );
               },
               child: Container(
@@ -387,13 +398,11 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // MAP
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: SizedBox(
@@ -403,21 +412,12 @@ class _MapScreenState extends State<MapScreen> {
                   onMapCreated: _onMapCreated,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
-
-                  zoomControlsEnabled: true,
-                  zoomGesturesEnabled: true,
-                  scrollGesturesEnabled: true,
-                  rotateGesturesEnabled: true,
-                  tiltGesturesEnabled: true,
-
                   circles: _circles,
-                  markers: _markers, // ✅ yeni
+                  markers: _markers,
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
             Align(
               alignment: Alignment.centerRight,
               child: GestureDetector(
@@ -437,7 +437,6 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
 
             if (_loadingPlaces)
@@ -494,38 +493,52 @@ class _MapScreenState extends State<MapScreen> {
                             final google =
                                 selectedPlace.googleRating?.toStringAsFixed(1) ??
                                     '-';
-                            final distKm = haversineKm(
-                              _userLocation!.latitude,
-                              _userLocation!.longitude,
-                              selectedPlace.lat,
-                              selectedPlace.lng,
-                            ).toStringAsFixed(1);
+                            final distKm = selectedPlace.distanceKm.toStringAsFixed(1);
+                            final isFav = favorites.isFavorite(selectedPlace.id);
 
-                            return Column(
+                            return Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  selectedPlace.name,
-                                  style: const TextStyle(
-                                    fontFamily: 'Times New Roman',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        selectedPlace.name,
+                                        style: const TextStyle(
+                                          fontFamily: 'Times New Roman',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        selectedPlace.address ?? '',
+                                        style: const TextStyle(
+                                          fontFamily: 'Times New Roman',
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'Mood score: $moodScore/10  •  Google: $google/5  •  $distKm km',
+                                        style: const TextStyle(
+                                          fontFamily: 'Times New Roman',
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  selectedPlace.address ?? '',
-                                  style: const TextStyle(
-                                    fontFamily: 'Times New Roman',
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Mood score: $moodScore/10  •  Google: $google/5  •  $distKm km',
-                                  style: const TextStyle(
-                                    fontFamily: 'Times New Roman',
-                                    fontSize: 12,
+                                IconButton(
+                                  onPressed: () {
+                                    favorites.toggleFavorite(selectedPlace);
+                                  },
+                                  icon: Icon(
+                                    isFav
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: Colors.redAccent,
                                   ),
                                 ),
                               ],
@@ -541,6 +554,8 @@ class _MapScreenState extends State<MapScreen> {
                             final isSelected = i == _selectedIndex;
                             final score =
                             (p.moodScores[_mood] ?? 0).toStringAsFixed(1);
+
+                            final isFav = favorites.isFavorite(p.id);
 
                             return GestureDetector(
                               onTap: () {
@@ -571,13 +586,26 @@ class _MapScreenState extends State<MapScreen> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
                                     Text(
                                       '$score/10',
                                       style: const TextStyle(
                                         fontFamily: 'Times New Roman',
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+
+                                    // ✅ Favori butonu
+                                    IconButton(
+                                      onPressed: () {
+                                        favorites.toggleFavorite(p);
+                                      },
+                                      icon: Icon(
+                                        isFav
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: Colors.redAccent,
                                       ),
                                     ),
                                   ],
@@ -593,7 +621,6 @@ class _MapScreenState extends State<MapScreen> {
           ],
         ),
       ),
-
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: _VibeBottomNavBar(
@@ -633,16 +660,10 @@ class _VibeBottomNavBar extends StatelessWidget {
       decoration: const BoxDecoration(
         color: primaryBlue,
         border: Border(
-          top: BorderSide(
-            color: Colors.white,
-            width: 2,
-          ),
+          top: BorderSide(color: Colors.white, width: 2),
         ),
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       child: Row(
         children: [
           Expanded(

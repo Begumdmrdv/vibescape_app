@@ -10,6 +10,7 @@ class Place {
 
 
   final Map<String, double> moodScores;
+  final double distanceKm;
 
   Place({
     required this.id,
@@ -18,6 +19,7 @@ class Place {
     required this.lng,
     required this.types,
     required this.moodScores,
+    required this.distanceKm,
     this.googleRating,
     this.userRatingsTotal,
     this.address,
