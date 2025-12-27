@@ -345,7 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     _ProfileStat(
                       value: visitedCount.toString(),
-                      label: 'Visited',
+                      label: 'Saved',
                     ),
                     _ProfileStat(
                       value: myMoodsCount.toString(),

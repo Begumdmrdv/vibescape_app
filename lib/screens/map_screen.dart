@@ -8,6 +8,8 @@ import '../models/place.dart';
 import '../services/places_api_service.dart';
 import '../utils/mood_scoring.dart';
 import '../services/favorites_service.dart';
+import 'dart:math';
+
 
 class MapScreen extends StatefulWidget {
   final String? mood;
@@ -32,6 +34,7 @@ class _MapScreenState extends State<MapScreen> {
 
   double _radiusKm = 15;
   GoogleMapController? _mapController;
+  final _rng = Random();
 
   LatLng? _userLocation;
   Set<Circle> _circles = {};
@@ -322,8 +325,18 @@ class _MapScreenState extends State<MapScreen> {
   void _suggestAlternative() {
     if (_places.isEmpty) return;
 
+    int newIndex = _selectedIndex;
+
+    if (_places.length == 1) {
+      newIndex = 0;
+    } else {
+      while (newIndex == _selectedIndex) {
+        newIndex = _rng.nextInt(_places.length);
+      }
+    }
+
     setState(() {
-      _selectedIndex = (_selectedIndex + 1) % _places.length;
+      _selectedIndex = newIndex;
     });
 
     _focusOnPlace(_places[_selectedIndex]);
@@ -487,85 +500,136 @@ class _MapScreenState extends State<MapScreen> {
                       if (selectedPlace != null)
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(14),
+                          margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            color: const Color(0xFFF4EEDF),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.18),
+                                blurRadius: 10,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
-
                           child: Builder(builder: (_) {
                             final place = selectedPlace!;
-                            final imgUrl = _photoUrl(place, maxWidth: 500);
+                            final imgUrl = _photoUrl(place, maxWidth: 600);
                             final moodScore =
                             (place.moodScores[_mood] ?? 0).toStringAsFixed(1);
-                            final google =
-                                place.googleRating?.toStringAsFixed(1) ?? '-';
+                            final google = place.googleRating?.toStringAsFixed(1) ?? '-';
                             final distKm = place.distanceKm.toStringAsFixed(1);
                             final isFav = favorites.isFavorite(place.id);
 
-                            return Row(
+                            return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: SizedBox(
-                                    width: 90,
-                                    height: 90,
-                                    child: imgUrl == null
-                                        ? Container(
-                                      color: Colors.black12,
-                                      child: const Icon(Icons.photo, color: Colors.black45),
-                                    )
-                                        : Image.network(
-                                      imgUrl,
-                                      fit: BoxFit.cover,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: primaryBlue,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: const Text(
+                                    'SELECTED PLACE',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'Times New Roman',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.6,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        place.name,
-                                        style: const TextStyle(
-                                          fontFamily: 'Times New Roman',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
+                                const SizedBox(height: 10),
+
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: SizedBox(
+                                        width: 96,
+                                        height: 96,
+                                        child: imgUrl == null
+                                            ? Container(
+                                          color: Colors.black12,
+                                          child: const Icon(Icons.photo, color: Colors.black45),
+                                        )
+                                            : Image.network(
+                                          imgUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stack) {
+                                            return Container(
+                                              color: Colors.black12,
+                                              child: const Icon(Icons.broken_image,
+                                                  color: Colors.black45),
+                                            );
+                                          },
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        place.address ?? '',
-                                        style: const TextStyle(
-                                          fontFamily: 'Times New Roman',
-                                          fontSize: 13,
-                                        ),
+                                    ),
+                                    const SizedBox(width: 12),
+
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            place.name,
+                                            style: const TextStyle(
+                                              fontFamily: 'Times New Roman',
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFF0D4F8B),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            place.address ?? '',
+                                            style: const TextStyle(
+                                              fontFamily: 'Times New Roman',
+                                              fontSize: 13,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF0D4F8B)),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'Mood: $moodScore/10',
+                                                style: const TextStyle(
+                                                  fontFamily: 'Times New Roman',
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Text(
+                                                'Google: $google/5 • $distKm km',
+                                                style: const TextStyle(
+                                                  fontFamily: 'Times New Roman',
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        'Mood score: $moodScore/10  •  Google: $google/5  •  $distKm km',
-                                        style: const TextStyle(
-                                          fontFamily: 'Times New Roman',
-                                          fontSize: 12,
-                                        ),
+                                    ),
+
+                                    IconButton(
+                                      onPressed: () => favorites.toggleFavorite(place),
+                                      icon: Icon(
+                                        isFav ? Icons.favorite : Icons.favorite_border,
+                                        color: Colors.redAccent,
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    favorites.toggleFavorite(place);
-                                  },
-                                  icon: Icon(
-                                    isFav
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color: Colors.redAccent,
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             );
