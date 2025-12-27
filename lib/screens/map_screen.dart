@@ -737,7 +737,7 @@ class _VibeBottomNavBar extends StatelessWidget {
                 ),
                 onPressed: onSuggestAlternative,
                 child: const Text(
-                  'Suggest Alternative',
+                  'Random Selection',
                   style: buttonTextStyle,
                   textAlign: TextAlign.center,
                 ),

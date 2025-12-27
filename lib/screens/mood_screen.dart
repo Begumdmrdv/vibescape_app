@@ -337,7 +337,7 @@ class _VibeBottomNavBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('Plans', style: labelStyle(1)),
+                  Text('Visits', style: labelStyle(1)),
                 ],
               ),
             ),
