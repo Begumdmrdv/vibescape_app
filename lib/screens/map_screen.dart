@@ -579,6 +579,8 @@ class _MapScreenState extends State<MapScreen> {
                                         children: [
                                           Text(
                                             place.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontFamily: 'Times New Roman',
                                               fontSize: 17,
@@ -589,6 +591,8 @@ class _MapScreenState extends State<MapScreen> {
                                           const SizedBox(height: 6),
                                           Text(
                                             place.address ?? '',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontFamily: 'Times New Roman',
                                               fontSize: 13,
@@ -596,10 +600,12 @@ class _MapScreenState extends State<MapScreen> {
                                             ),
                                           ),
                                           const SizedBox(height: 8),
-                                          Row(
+                                          Wrap(
+                                            spacing: 10,
+                                            runSpacing: 6,
+                                            crossAxisAlignment: WrapCrossAlignment.center,
                                             children: [
                                               const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF0D4F8B)),
-                                              const SizedBox(width: 6),
                                               Text(
                                                 'Mood: $moodScore/10',
                                                 style: const TextStyle(
@@ -608,7 +614,6 @@ class _MapScreenState extends State<MapScreen> {
                                                   fontWeight: FontWeight.w700,
                                                 ),
                                               ),
-                                              const SizedBox(width: 10),
                                               Text(
                                                 'Google: $google/5 • $distKm km',
                                                 style: const TextStyle(
@@ -618,17 +623,24 @@ class _MapScreenState extends State<MapScreen> {
                                               ),
                                             ],
                                           ),
+
                                         ],
                                       ),
                                     ),
 
-                                    IconButton(
-                                      onPressed: () => favorites.toggleFavorite(place),
-                                      icon: Icon(
-                                        isFav ? Icons.favorite : Icons.favorite_border,
-                                        color: Colors.redAccent,
+                                    SizedBox(
+                                      width: 44,
+                                      height: 44,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () => favorites.toggleFavorite(place),
+                                        icon: Icon(
+                                          isFav ? Icons.favorite : Icons.favorite_border,
+                                          color: Colors.redAccent,
+                                        ),
                                       ),
                                     ),
+
                                   ],
                                 ),
                               ],

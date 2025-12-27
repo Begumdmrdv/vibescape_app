@@ -14,18 +14,20 @@ class MoodScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D4F8B),
         elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'HOME',
+          style: TextStyle(
+            fontFamily: 'Times New Roman',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
-        ),
-        centerTitle: true,
-        title: const Text(
-          'HOW ARE YOU FEELING TODAY?',
-          style: TextStyle(
-            fontSize: 14,
-            fontFamily: 'Times New Roman',
-            color: Colors.white,
-          ),
         ),
       ),
 
@@ -35,6 +37,20 @@ class MoodScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(height: 16),
+
+            const Text(
+              'HOW ARE YOU\nFEELING TODAY?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Times New Roman',
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
+
+            const SizedBox(height: 28),
 
             Wrap(
               spacing: 24,
@@ -53,10 +69,7 @@ class MoodScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: _MoodItem(
-                    label: 'Happy',
-                    icon: Icons.sentiment_satisfied_alt,
-                  ),
+                  child: _MoodItem(label: 'Happy', imagePath: 'assets/images/happy.jpg'),
                 ),
 
                 InkWell(
@@ -72,7 +85,7 @@ class MoodScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: _MoodItem(label: 'Energetic', icon: Icons.bolt),
+                  child: _MoodItem(label: 'Energetic', imagePath: 'assets/images/energetic.jpg'),
                 ),
 
                 InkWell(
@@ -89,7 +102,7 @@ class MoodScreen extends StatelessWidget {
                     );
                   },
                   child:
-                  _MoodItem(label: 'Relaxed', icon: Icons.self_improvement),
+                  _MoodItem(label: 'Relaxed', imagePath: 'assets/images/relaxed.jpg'),
                 ),
 
                 InkWell(
@@ -105,7 +118,7 @@ class MoodScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: _MoodItem(label: 'Romantic', icon: Icons.favorite),
+                  child: _MoodItem(label: 'Romantic', imagePath: 'assets/images/romantic.jpg'),
                 ),
 
                 InkWell(
@@ -121,7 +134,7 @@ class MoodScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: _MoodItem(label: 'Adventurous', icon: Icons.terrain),
+                  child: _MoodItem(label: 'Adventurous', imagePath: 'assets/images/adventurous.jpg'),
                 ),
 
                 InkWell(
@@ -138,7 +151,7 @@ class MoodScreen extends StatelessWidget {
                     );
                   },
                   child:
-                  _MoodItem(label: 'Curious', icon: Icons.travel_explore),
+                  _MoodItem(label: 'Curious', imagePath: 'assets/images/curious.jpg'),
                 ),
               ],
             ),
@@ -210,12 +223,12 @@ class MoodScreen extends StatelessWidget {
 
 class _MoodItem extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String imagePath;
 
   const _MoodItem({
     super.key,
     required this.label,
-    required this.icon,
+    required this.imagePath,
   });
 
   @override
@@ -231,15 +244,23 @@ class _MoodItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: cream,
             borderRadius: BorderRadius.circular(16),
+
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.18),
+                blurRadius: 10,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           alignment: Alignment.center,
-          child: CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.white,
-            child: Icon(
-              icon,
-              color: Colors.black87,
-              size: 28,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Image.asset(
+              imagePath,
+              width: 60,
+              height: 60,
+              fit: BoxFit.cover,
             ),
           ),
         ),
