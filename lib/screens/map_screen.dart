@@ -530,7 +530,7 @@ class _MapScreenState extends State<MapScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        selectedPlace.name,
+                                        place.name,
                                         style: const TextStyle(
                                           fontFamily: 'Times New Roman',
                                           fontSize: 16,
@@ -539,7 +539,7 @@ class _MapScreenState extends State<MapScreen> {
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
-                                        selectedPlace.address ?? '',
+                                        place.address ?? '',
                                         style: const TextStyle(
                                           fontFamily: 'Times New Roman',
                                           fontSize: 13,
@@ -558,7 +558,7 @@ class _MapScreenState extends State<MapScreen> {
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    favorites.toggleFavorite(selectedPlace);
+                                    favorites.toggleFavorite(place);
                                   },
                                   icon: Icon(
                                     isFav
