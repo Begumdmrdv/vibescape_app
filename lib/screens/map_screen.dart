@@ -181,6 +181,7 @@ class _MapScreenState extends State<MapScreen> {
             userRatingsTotal: p['user_ratings_total'] as int?,
             moodScores: moodScores,
             distanceKm: dist,
+            photoRef: p['photo_ref'] as String?,
           ),
         );
       }
@@ -231,6 +232,12 @@ class _MapScreenState extends State<MapScreen> {
       });
     }
   }
+
+  String? _photoUrl(Place p, {int maxWidth = 400}) {
+    if (p.photoRef == null || p.photoRef!.isEmpty) return null;
+    return _placesApi.placePhotoUrl(photoRef: p.photoRef!, maxWidth: maxWidth);
+  }
+
 
   void _focusOnPlace(Place p) {
     _mapController?.animateCamera(
@@ -486,19 +493,38 @@ class _MapScreenState extends State<MapScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                           ),
+
                           child: Builder(builder: (_) {
+                            final place = selectedPlace!;
+                            final imgUrl = _photoUrl(place, maxWidth: 500);
                             final moodScore =
-                            (selectedPlace.moodScores[_mood] ?? 0)
-                                .toStringAsFixed(1);
+                            (place.moodScores[_mood] ?? 0).toStringAsFixed(1);
                             final google =
-                                selectedPlace.googleRating?.toStringAsFixed(1) ??
-                                    '-';
-                            final distKm = selectedPlace.distanceKm.toStringAsFixed(1);
-                            final isFav = favorites.isFavorite(selectedPlace.id);
+                                place.googleRating?.toStringAsFixed(1) ?? '-';
+                            final distKm = place.distanceKm.toStringAsFixed(1);
+                            final isFav = favorites.isFavorite(place.id);
 
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: SizedBox(
+                                    width: 90,
+                                    height: 90,
+                                    child: imgUrl == null
+                                        ? Container(
+                                      color: Colors.black12,
+                                      child: const Icon(Icons.photo, color: Colors.black45),
+                                    )
+                                        : Image.network(
+                                      imgUrl,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,6 +582,7 @@ class _MapScreenState extends State<MapScreen> {
                             (p.moodScores[_mood] ?? 0).toStringAsFixed(1);
 
                             final isFav = favorites.isFavorite(p.id);
+                            final imgUrl = _photoUrl(p);
 
                             return GestureDetector(
                               onTap: () {
@@ -576,6 +603,35 @@ class _MapScreenState extends State<MapScreen> {
                                 ),
                                 child: Row(
                                   children: [
+
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: SizedBox(
+                                        width: 64,
+                                        height: 64,
+                                        child: imgUrl == null
+                                            ? Container(
+                                          color: Colors.black12,
+                                          child: const Icon(Icons.photo, color: Colors.black45),
+                                        )
+                                            : Image.network(
+                                          imgUrl,
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child, progress) {
+                                            if (progress == null) return child;
+                                            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                                          },
+                                          errorBuilder: (context, error, stack) {
+                                            return Container(
+                                              color: Colors.black12,
+                                              child: const Icon(Icons.broken_image, color: Colors.black45),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+
                                     Expanded(
                                       child: Text(
                                         p.name,
@@ -596,7 +652,7 @@ class _MapScreenState extends State<MapScreen> {
                                     ),
                                     const SizedBox(width: 8),
 
-                                    // ✅ Favori butonu
+                                    // Favori butonu
                                     IconButton(
                                       onPressed: () {
                                         favorites.toggleFavorite(p);

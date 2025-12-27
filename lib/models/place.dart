@@ -7,6 +7,7 @@ class Place {
   final int? userRatingsTotal;
   final String? address;
   final List<String> types;
+  final String? photoRef;
 
 
   final Map<String, double> moodScores;
@@ -20,6 +21,8 @@ class Place {
     required this.types,
     required this.moodScores,
     required this.distanceKm,
+    required this.photoRef,
+
     this.googleRating,
     this.userRatingsTotal,
     this.address,

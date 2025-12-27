@@ -36,6 +36,9 @@ class PlacesApiService {
 
     return results.map<Map<String, dynamic>>((p) {
       final loc = p['geometry']['location'];
+      final photos = (p['photos'] as List?) ?? [];
+      final photoRef = photos.isNotEmpty ? photos.first['photo_reference'] as String? : null;
+
       return {
         'place_id': p['place_id'],
         'name': p['name'],
@@ -45,7 +48,20 @@ class PlacesApiService {
         'user_ratings_total': (p['user_ratings_total'] as num?)?.toInt(),
         'vicinity': p['vicinity'],
         'types': List<String>.from(p['types'] ?? []),
+        'photo_ref': photoRef,
+
       };
     }).toList();
   }
+
+  String placePhotoUrl({
+    required String photoRef,
+    int maxWidth = 400,
+  }) {
+    return 'https://maps.googleapis.com/maps/api/place/photo'
+        '?maxwidth=$maxWidth'
+        '&photo_reference=$photoRef'
+        '&key=$apiKey';
+  }
+
 }
