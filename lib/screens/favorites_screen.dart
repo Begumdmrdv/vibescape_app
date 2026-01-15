@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../services/favorites_service.dart';
 import '../services/places_api_service.dart';
 import '../models/place.dart';
+import '../services/visited_service.dart';
+
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
@@ -24,8 +26,9 @@ class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final favs = context.watch<FavoritesService>().favorites;
+    final visited = context.watch<VisitedService>();
 
-    // MapScreen’de kullandığın key ile aynı (istersen tek yerde sabitleyelim)
+    // MapScreen’de kullandığın key ile aynı
     final api = PlacesApiService('AIzaSyCRWOtfsyFdobFs6h79dXyBhYb4fhoC8hc');
 
     const primaryBlue = Color(0xFF0D4F8B);
@@ -184,19 +187,36 @@ class FavoritesScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                // SİL
-                SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: () {
-                      context.read<FavoritesService>().remove(p.id);
-                    },
-                    icon: const Icon(Icons.delete_outline),
-                  ),
+                
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Mark as visited',
+                      onPressed: () {
+                        visited.toggleVisited(p);
+                      },
+                      icon: Icon(
+                        visited.isVisited(p.id)
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
+                        color: visited.isVisited(p.id) ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
+                          context.read<FavoritesService>().remove(p.id);
+                        },
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    ),
+                  ],
                 ),
+
               ],
             ),
           );

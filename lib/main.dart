@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'package:vibescape_app/screens/login_screen.dart';
 import 'services/stats_service.dart';
 import 'services/favorites_service.dart';
+import 'services/visited_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FavoritesService()),
+        ChangeNotifierProvider(create: (_) => VisitedService()),
       ],
       child: const MyApp(),
     ),

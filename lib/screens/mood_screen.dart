@@ -3,6 +3,8 @@ import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:vibescape_app/screens/profile_screen.dart'; // myMoodsCount buradan geliyor
 import 'package:vibescape_app/screens/map_screen.dart';
 import '../services/stats_service.dart';
+import 'visits_screen.dart';
+
 
 class MoodScreen extends StatelessWidget {
   const MoodScreen({super.key});
@@ -341,7 +343,7 @@ class _VibeBottomNavBar extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const MapScreen(),
+                    builder: (context) => const VisitsScreen(),
                   ),
                 );
               },
