@@ -9,13 +9,11 @@ class VisitsScreen extends StatelessWidget {
 
   static const primaryBlue = Color(0xFF0D4F8B);
 
-  // Foto URL
   String? _photoUrl(PlacesApiService api, Place p, {int maxWidth = 500}) {
     if (p.photoRef == null || p.photoRef!.isEmpty) return null;
     return api.placePhotoUrl(photoRef: p.photoRef!, maxWidth: maxWidth);
   }
 
-  // Mood list
   static const moods = [
     'Happy',
     'Energetic',

@@ -1,20 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
-import 'package:vibescape_app/screens/profile_screen.dart'; // myMoodsCount buradan geliyor
+import 'package:vibescape_app/screens/profile_screen.dart';
 import 'package:vibescape_app/screens/map_screen.dart';
 import '../services/stats_service.dart';
 import 'visits_screen.dart';
-
+import 'dart:math';
 
 class MoodScreen extends StatelessWidget {
   const MoodScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    const primaryBlue = Color(0xFF0D4F8B);
+
+    Future<void> _goMood(String mood) async {
+      myMoodsCount++;
+      await StatsService.setMyMoods(myMoodsCount);
+      await StatsService.incrementMood(mood);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => MapScreen(mood: mood)),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D4F8B),
+      backgroundColor: primaryBlue,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D4F8B),
+        backgroundColor: primaryBlue,
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -60,100 +73,46 @@ class MoodScreen extends StatelessWidget {
               alignment: WrapAlignment.center,
               children: [
                 InkWell(
-                  onTap: () async {
-                    myMoodsCount++; // <-- CHANGED
-                    await StatsService.setMyMoods(myMoodsCount);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                        const MapScreen(mood: 'Happy'),
-                      ),
-                    );
-                  },
-                  child: _MoodItem(label: 'Happy', imagePath: 'assets/images/happy.jpg'),
+                  onTap: () => _goMood('Happy'),
+                  child: const _MoodItem(
+                    label: 'Happy',
+                    imagePath: 'assets/images/happy.jpg',
+                  ),
                 ),
-
                 InkWell(
-                  onTap: () async {
-                    myMoodsCount++; // <-- CHANGED
-                    await StatsService.setMyMoods(myMoodsCount);
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                        const MapScreen(mood: 'Energetic'),
-                      ),
-                    );
-                  },
-                  child: _MoodItem(label: 'Energetic', imagePath: 'assets/images/energetic.jpg'),
+                  onTap: () => _goMood('Energetic'),
+                  child: const _MoodItem(
+                    label: 'Energetic',
+                    imagePath: 'assets/images/energetic.jpg',
+                  ),
                 ),
-
                 InkWell(
-                  onTap: () async {
-                    myMoodsCount++; // <-- CHANGED
-                    await StatsService.setMyMoods(myMoodsCount);
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                        const MapScreen(mood: 'Relaxed'),
-                      ),
-                    );
-                  },
-                  child:
-                  _MoodItem(label: 'Relaxed', imagePath: 'assets/images/relaxed.jpg'),
+                  onTap: () => _goMood('Relaxed'),
+                  child: const _MoodItem(
+                    label: 'Relaxed',
+                    imagePath: 'assets/images/relaxed.jpg',
+                  ),
                 ),
-
                 InkWell(
-                  onTap: () async {
-                    myMoodsCount++; // <-- CHANGED
-                    await StatsService.setMyMoods(myMoodsCount);
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                        const MapScreen(mood: 'Romantic'),
-                      ),
-                    );
-                  },
-                  child: _MoodItem(label: 'Romantic', imagePath: 'assets/images/romantic.jpg'),
+                  onTap: () => _goMood('Romantic'),
+                  child: const _MoodItem(
+                    label: 'Romantic',
+                    imagePath: 'assets/images/romantic.jpg',
+                  ),
                 ),
-
                 InkWell(
-                  onTap: () async {
-                    myMoodsCount++; // <-- CHANGED
-                    await StatsService.setMyMoods(myMoodsCount);
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                        const MapScreen(mood: 'Adventurous'),
-                      ),
-                    );
-                  },
-                  child: _MoodItem(label: 'Adventurous', imagePath: 'assets/images/adventurous.jpg'),
+                  onTap: () => _goMood('Adventurous'),
+                  child: const _MoodItem(
+                    label: 'Adventurous',
+                    imagePath: 'assets/images/adventurous.jpg',
+                  ),
                 ),
-
                 InkWell(
-                  onTap: () async {
-                    myMoodsCount++; // <-- CHANGED
-                    await StatsService.setMyMoods(myMoodsCount);
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                        const MapScreen(mood: 'Curious'),
-                      ),
-                    );
-                  },
-                  child:
-                  _MoodItem(label: 'Curious', imagePath: 'assets/images/curious.jpg'),
+                  onTap: () => _goMood('Curious'),
+                  child: const _MoodItem(
+                    label: 'Curious',
+                    imagePath: 'assets/images/curious.jpg',
+                  ),
                 ),
               ],
             ),
@@ -166,7 +125,7 @@ class MoodScreen extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF4EEDF),
-                  foregroundColor: const Color(0xFF0D4F8B),
+                  foregroundColor: primaryBlue,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
@@ -178,26 +137,11 @@ class MoodScreen extends StatelessWidget {
                     'Energetic',
                     'Relaxed',
                     'Romantic',
-                    'Romantic',
                     'Adventurous',
                     'Curious',
                   ];
-
-                  final millis =
-                      DateTime.now().millisecondsSinceEpoch;
-                  final index = millis % moods.length;
-                  final randomMood = moods[index];
-
-                  myMoodsCount++; // <-- CHANGED (random mood seçince de +1)
-                  await StatsService.setMyMoods(myMoodsCount);
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          MapScreen(mood: randomMood),
-                    ),
-                  );
+                  final randomMood = moods[Random().nextInt(moods.length)];
+                  await _goMood(randomMood);
                 },
                 child: const Text(
                   'Pick Random',
@@ -215,9 +159,7 @@ class MoodScreen extends StatelessWidget {
 
       bottomNavigationBar: const Padding(
         padding: EdgeInsets.only(bottom: 10),
-        child: _VibeBottomNavBar(
-          selectedIndex: 0,
-        ),
+        child: _VibeBottomNavBar(selectedIndex: 0),
       ),
     );
   }
@@ -246,7 +188,6 @@ class _MoodItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: cream,
             borderRadius: BorderRadius.circular(16),
-
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.18),
@@ -318,19 +259,13 @@ class _VibeBottomNavBar extends StatelessWidget {
               onTap: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const MoodScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const MoodScreen()),
                 );
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.home,
-                    size: 28,
-                    color: Colors.white,
-                  ),
+                  const Icon(Icons.home, size: 28, color: Colors.white),
                   const SizedBox(height: 4),
                   Text('Home', style: labelStyle(0)),
                 ],
@@ -342,9 +277,7 @@ class _VibeBottomNavBar extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const VisitsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const VisitsScreen()),
                 );
               },
               child: Column(
@@ -353,11 +286,7 @@ class _VibeBottomNavBar extends StatelessWidget {
                   const CircleAvatar(
                     radius: 14,
                     backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.star,
-                      size: 22,
-                      color: primaryBlue,
-                    ),
+                    child: Icon(Icons.star, size: 22, color: primaryBlue),
                   ),
                   const SizedBox(height: 4),
                   Text('Visits', style: labelStyle(1)),
@@ -370,19 +299,13 @@ class _VibeBottomNavBar extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const FavoritesScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const FavoritesScreen()),
                 );
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.favorite,
-                    size: 28,
-                    color: Colors.white,
-                  ),
+                  const Icon(Icons.favorite, size: 28, color: Colors.white),
                   const SizedBox(height: 4),
                   Text('Favorites', style: labelStyle(2)),
                 ],
@@ -394,9 +317,7 @@ class _VibeBottomNavBar extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
                 );
               },
               child: Column(

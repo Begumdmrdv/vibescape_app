@@ -1,13 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
 import 'package:vibescape_app/screens/login_screen.dart';
+import 'package:vibescape_app/screens/favorites_screen.dart';
+import 'package:vibescape_app/screens/visits_screen.dart';
+import '../services/favorites_service.dart';
 import '../services/stats_service.dart';
 
-// GLOBAL SAYAÇLAR
-int discoveriesCount = 0; // seçilen mekan sayısı
-int visitedCount = 0;     // yıldız verilen mekan sayısı
-int myMoodsCount = 0;     // seçilen mood sayısı
+int discoveriesCount = 0;
+int visitedCount = 0;
+int myMoodsCount = 0;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,24 +21,21 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  String _userName = 'User Name';
+
+  bool _appNotifications = true;
+  bool _emailNotifications = false;
 
   @override
   void initState() {
     super.initState();
-
     discoveriesCount = StatsService.discoveriesCount;
     visitedCount = StatsService.visitedCount;
     myMoodsCount = StatsService.myMoodsCount;
   }
-
-  File? _profileImage;
-  final ImagePicker _picker = ImagePicker();
-
-  String _userName = 'User Name'; // editlenebilir isim
-
-  // Notifications state
-  bool _appNotifications = true;
-  bool _emailNotifications = false;
 
   Future<void> _pickImage() async {
     final XFile? pickedFile =
@@ -106,7 +107,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Notifications popup
   void _showNotificationsDialog() {
     showDialog(
       context: context,
@@ -181,7 +181,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // SIGN OUT DİYALOĞU
   void _showSignOutDialog() {
     showDialog(
       context: context,
@@ -209,12 +208,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // dialogu kapat
+                Navigator.pop(context);
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                       (route) => false,
                 );
               },
@@ -229,9 +226,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _openMoodsBreakdown(BuildContext context) {
+    final moodMap = StatsService.moodCounts; // Map<String,int>
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MoodsBreakdownScreen(moodCounts: moodMap),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color blue = Color(0xFF0D4F8B);
+
+    final favoritesService = context.watch<FavoritesService>();
+    final savedCount = favoritesService.favorites.length;
+
+    final visitsCount = visitedCount;
 
     return Scaffold(
       backgroundColor: blue,
@@ -252,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const SizedBox(height: 24),
 
-                // *** EDITLENEBİLİR PROFİL FOTO ***
+                // PROFIL FOTO
                 GestureDetector(
                   onTap: _pickImage,
                   child: Stack(
@@ -280,7 +292,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
-                      // küçük kamera ikonu
                       Container(
                         width: 32,
                         height: 32,
@@ -300,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
-                // *** EDITLENEBİLİR USER NAME ***
+                // USER NAME
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -335,21 +346,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 32),
 
-                // sayaçların profilde gösterildiği yer
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _ProfileStat(
-                      value: discoveriesCount.toString(),
+                      value: visitsCount.toString(),
                       label: 'Discoveries',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const VisitsScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _ProfileStat(
-                      value: visitedCount.toString(),
+                      value: savedCount.toString(),
                       label: 'Saved',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const FavoritesScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _ProfileStat(
                       value: myMoodsCount.toString(),
                       label: 'My Moods',
+                      onTap: () => _openMoodsBreakdown(context),
                     ),
                   ],
                 ),
@@ -362,7 +389,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.settings,
                   label: 'Settings',
                   onTap: () {},
-                  //ToDO: buraya geçmiş (geçmiş hareketler), izinler (veri, konum, güvenlik) ve şifre değiştirme kısmı mı koysak
                 ),
 
                 const Divider(color: Colors.white, thickness: 1),
@@ -395,15 +421,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 class _ProfileStat extends StatelessWidget {
   final String value;
   final String label;
+  final VoidCallback? onTap;
 
   const _ProfileStat({
     required this.value,
     required this.label,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final content = Column(
       children: [
         Text(
           value,
@@ -423,6 +451,15 @@ class _ProfileStat extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
       ],
+    );
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: content,
+      ),
     );
   }
 }
@@ -458,6 +495,86 @@ class _ProfileMenuTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class MoodsBreakdownScreen extends StatelessWidget {
+  final Map<String, int> moodCounts;
+
+  const MoodsBreakdownScreen({super.key, required this.moodCounts});
+
+  @override
+  Widget build(BuildContext context) {
+    const blue = Color(0xFF0D4F8B);
+
+    final entries = moodCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Scaffold(
+      backgroundColor: blue,
+      appBar: AppBar(
+        backgroundColor: blue,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'MY MOODS',
+          style: TextStyle(
+            fontFamily: 'Times New Roman',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: entries.isEmpty
+          ? const Center(
+        child: Text(
+          'No mood data yet.',
+          style: TextStyle(color: Colors.white, fontFamily: 'Times New Roman'),
+        ),
+      )
+          : ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: entries.length,
+        itemBuilder: (_, i) {
+          final e = entries[i];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    e.key,
+                    style: const TextStyle(
+                      fontFamily: 'Times New Roman',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: blue,
+                    ),
+                  ),
+                ),
+                Text(
+                  e.value.toString(),
+                  style: const TextStyle(
+                    fontFamily: 'Times New Roman',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: blue,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

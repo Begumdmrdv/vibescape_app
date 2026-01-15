@@ -9,13 +9,11 @@ import '../services/visited_service.dart';
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
 
-  // Foto URL üretme
   String? _photoUrl(PlacesApiService api, Place p, {int maxWidth = 400}) {
     if (p.photoRef == null || p.photoRef!.isEmpty) return null;
     return api.placePhotoUrl(photoRef: p.photoRef!, maxWidth: maxWidth);
   }
 
-  // En iyi mood’u bul (Favorites ekranında hangi mood gösterilecek belirsiz olduğu için)
   MapEntry<String, double>? _bestMood(Place p) {
     if (p.moodScores.isEmpty) return null;
     final sorted = p.moodScores.entries.toList()
@@ -28,7 +26,6 @@ class FavoritesScreen extends StatelessWidget {
     final favs = context.watch<FavoritesService>().favorites;
     final visited = context.watch<VisitedService>();
 
-    // MapScreen’de kullandığın key ile aynı
     final api = PlacesApiService('AIzaSyCRWOtfsyFdobFs6h79dXyBhYb4fhoC8hc');
 
     const primaryBlue = Color(0xFF0D4F8B);
@@ -86,7 +83,6 @@ class FavoritesScreen extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // FOTO
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: SizedBox(
@@ -124,7 +120,6 @@ class FavoritesScreen extends StatelessWidget {
 
                 const SizedBox(width: 12),
 
-                // DETAYLAR
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

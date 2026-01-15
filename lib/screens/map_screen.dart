@@ -9,6 +9,8 @@ import '../services/places_api_service.dart';
 import '../utils/mood_scoring.dart';
 import '../services/favorites_service.dart';
 import 'dart:math';
+import '../services/stats_service.dart';
+
 
 
 class MapScreen extends StatefulWidget {
@@ -342,16 +344,17 @@ class _MapScreenState extends State<MapScreen> {
     _focusOnPlace(_places[_selectedIndex]);
   }
 
-  void _saveSelected() {
+  void _saveSelected() async {
     if (_places.isEmpty) return;
 
-    discoveriesCount++;
+    discoveriesCount = StatsService.discoveriesCount + 1;
+    await StatsService.setDiscoveries(discoveriesCount);
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Saved: ${_places[_selectedIndex].name}'),
-      ),
+      SnackBar(content: Text('Saved: ${_places[_selectedIndex].name}')),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

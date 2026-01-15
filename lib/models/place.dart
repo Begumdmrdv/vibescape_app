@@ -27,4 +27,43 @@ class Place {
     this.userRatingsTotal,
     this.address,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'lat': lat,
+      'lng': lng,
+      'types': types,
+      'address': address,
+      'googleRating': googleRating,
+      'userRatingsTotal': userRatingsTotal,
+      'moodScores': moodScores,
+      'distanceKm': distanceKm,
+      'photoRef': photoRef,
+    };
+  }
+
+  factory Place.fromJson(Map<String, dynamic> json) {
+    return Place(
+      id: json['id'],
+      name: json['name'],
+      lat: (json['lat'] as num).toDouble(),
+      lng: (json['lng'] as num).toDouble(),
+      types: List<String>.from(json['types'] ?? []),
+      address: json['address'],
+      googleRating: (json['googleRating'] as num?)?.toDouble(),
+      userRatingsTotal: json['userRatingsTotal'],
+      moodScores: (json['moodScores'] as Map<String, dynamic>?)
+          ?.map((key, value) =>
+          MapEntry(key, (value as num).toDouble())) ??
+          {},
+      distanceKm: (json['distanceKm'] as num).toDouble(),
+      photoRef: json['photoRef'],
+    );
+  }
+
+
+
+
 }
