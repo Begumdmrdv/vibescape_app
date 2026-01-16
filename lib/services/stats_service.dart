@@ -36,43 +36,23 @@ class StatsService {
     await _prefs.setInt(_keyMoodsTotal, value);
   }
 
-  static Future<void> _setMoodCounts(Map<String, int> map) async {
-    await _prefs.setString(_keyMoodCounts, jsonEncode(map));
-  }
-
-  static Future<void> incrementMoodsTotal() async {
-    await _prefs.setInt(_keyMoodsTotal, myMoodsCount + 1);
-  }
-
-  static Future<void> incrementMood(String mood) async {
-    final current = moodCounts;
-    current[mood] = (current[mood] ?? 0) + 1;
-    await _setMoodCounts(current);
-  }
-
-  static Future<void> incrementMyMoods(String mood) async {
-    await _prefs.setInt(_keyMoodsTotal, myMoodsCount + 1);
-    final current = moodCounts;
-    current[mood] = (current[mood] ?? 0) + 1;
-    await _setMoodCounts(current);
-  }
-
   static Future<void> incrementDiscoveries() async {
     await _prefs.setInt(_keyDiscoveries, discoveriesCount + 1);
   }
 
-  static Future<void> incrementVisited() async {
-    await _prefs.setInt(_keyVisited, visitedCount + 1);
+  static Future<void> setVisitedCount(int value) async {
+    await _prefs.setInt(_keyVisited, value);
   }
 
-  static Future<void> clearMoodCounts() async {
-    await _prefs.remove(_keyMoodCounts);
+  static Future<void> _setMoodCounts(Map<String, int> map) async {
+    await _prefs.setString(_keyMoodCounts, jsonEncode(map));
   }
 
-  static Future<void> clearAll() async {
-    await _prefs.remove(_keyDiscoveries);
-    await _prefs.remove(_keyVisited);
-    await _prefs.remove(_keyMoodsTotal);
-    await _prefs.remove(_keyMoodCounts);
+  static Future<void> incrementMood(String mood) async {
+    await _prefs.setInt(_keyMoodsTotal, myMoodsCount + 1);
+
+    final current = moodCounts;
+    current[mood] = (current[mood] ?? 0) + 1;
+    await _setMoodCounts(current);
   }
 }

@@ -347,14 +347,12 @@ class _MapScreenState extends State<MapScreen> {
   void _saveSelected() async {
     if (_places.isEmpty) return;
 
-    discoveriesCount = StatsService.discoveriesCount + 1;
-    await StatsService.setDiscoveries(discoveriesCount);
+    await StatsService.incrementDiscoveries();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Saved: ${_places[_selectedIndex].name}')),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

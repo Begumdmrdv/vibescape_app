@@ -20,7 +20,13 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FavoritesService()),
-        ChangeNotifierProvider(create: (_) => VisitedService()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final svc = VisitedService();
+            svc.load();
+            return svc;
+          },
+        ),
       ],
       child: const MyApp(),
     ),

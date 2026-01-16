@@ -9,10 +9,6 @@ import 'package:vibescape_app/screens/visits_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/stats_service.dart';
 
-int discoveriesCount = 0;
-int visitedCount = 0;
-int myMoodsCount = 0;
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -28,14 +24,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _appNotifications = true;
   bool _emailNotifications = false;
-
-  @override
-  void initState() {
-    super.initState();
-    discoveriesCount = StatsService.discoveriesCount;
-    visitedCount = StatsService.visitedCount;
-    myMoodsCount = StatsService.myMoodsCount;
-  }
 
   Future<void> _pickImage() async {
     final XFile? pickedFile =
@@ -227,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _openMoodsBreakdown(BuildContext context) {
-    final moodMap = StatsService.moodCounts; // Map<String,int>
+    final moodMap = StatsService.moodCounts;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -243,7 +231,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final favoritesService = context.watch<FavoritesService>();
     final savedCount = favoritesService.favorites.length;
 
-    final visitsCount = visitedCount;
+    // ✅ DOĞRU KAYNAK: StatsService
+    final discoveriesCount = StatsService.discoveriesCount;
+    final myMoodsCount = StatsService.myMoodsCount;
 
     return Scaffold(
       backgroundColor: blue,
@@ -264,7 +254,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const SizedBox(height: 24),
 
-                // PROFIL FOTO
                 GestureDetector(
                   onTap: _pickImage,
                   child: Stack(
@@ -311,7 +300,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
-                // USER NAME
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -350,14 +338,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _ProfileStat(
-                      value: visitsCount.toString(),
+                      value: discoveriesCount.toString(),
                       label: 'Discoveries',
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const VisitsScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const VisitsScreen()),
                         );
                       },
                     ),
@@ -367,9 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const FavoritesScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const FavoritesScreen()),
                         );
                       },
                     ),

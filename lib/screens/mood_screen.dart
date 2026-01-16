@@ -1,10 +1,10 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:vibescape_app/screens/profile_screen.dart';
 import 'package:vibescape_app/screens/map_screen.dart';
 import '../services/stats_service.dart';
 import 'visits_screen.dart';
-import 'dart:math';
 
 class MoodScreen extends StatelessWidget {
   const MoodScreen({super.key});
@@ -14,8 +14,8 @@ class MoodScreen extends StatelessWidget {
     const primaryBlue = Color(0xFF0D4F8B);
 
     Future<void> _goMood(String mood) async {
-      myMoodsCount++;
-      await StatsService.setMyMoods(myMoodsCount);
+      // ✅ Artık global myMoodsCount yok.
+      // ✅ Tek çağrı yeter: toplam + dağılımı kaydeder
       await StatsService.incrementMood(mood);
 
       Navigator.push(
@@ -45,14 +45,12 @@ class MoodScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(height: 16),
-
             const Text(
               'HOW ARE YOU\nFEELING TODAY?',
               textAlign: TextAlign.center,
@@ -64,9 +62,7 @@ class MoodScreen extends StatelessWidget {
                 letterSpacing: 1.2,
               ),
             ),
-
             const SizedBox(height: 28),
-
             Wrap(
               spacing: 24,
               runSpacing: 24,
@@ -74,51 +70,31 @@ class MoodScreen extends StatelessWidget {
               children: [
                 InkWell(
                   onTap: () => _goMood('Happy'),
-                  child: const _MoodItem(
-                    label: 'Happy',
-                    imagePath: 'assets/images/happy.jpg',
-                  ),
+                  child: const _MoodItem(label: 'Happy', imagePath: 'assets/images/happy.jpg'),
                 ),
                 InkWell(
                   onTap: () => _goMood('Energetic'),
-                  child: const _MoodItem(
-                    label: 'Energetic',
-                    imagePath: 'assets/images/energetic.jpg',
-                  ),
+                  child: const _MoodItem(label: 'Energetic', imagePath: 'assets/images/energetic.jpg'),
                 ),
                 InkWell(
                   onTap: () => _goMood('Relaxed'),
-                  child: const _MoodItem(
-                    label: 'Relaxed',
-                    imagePath: 'assets/images/relaxed.jpg',
-                  ),
+                  child: const _MoodItem(label: 'Relaxed', imagePath: 'assets/images/relaxed.jpg'),
                 ),
                 InkWell(
                   onTap: () => _goMood('Romantic'),
-                  child: const _MoodItem(
-                    label: 'Romantic',
-                    imagePath: 'assets/images/romantic.jpg',
-                  ),
+                  child: const _MoodItem(label: 'Romantic', imagePath: 'assets/images/romantic.jpg'),
                 ),
                 InkWell(
                   onTap: () => _goMood('Adventurous'),
-                  child: const _MoodItem(
-                    label: 'Adventurous',
-                    imagePath: 'assets/images/adventurous.jpg',
-                  ),
+                  child: const _MoodItem(label: 'Adventurous', imagePath: 'assets/images/adventurous.jpg'),
                 ),
                 InkWell(
                   onTap: () => _goMood('Curious'),
-                  child: const _MoodItem(
-                    label: 'Curious',
-                    imagePath: 'assets/images/curious.jpg',
-                  ),
+                  child: const _MoodItem(label: 'Curious', imagePath: 'assets/images/curious.jpg'),
                 ),
               ],
             ),
-
             const SizedBox(height: 32),
-
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -156,7 +132,6 @@ class MoodScreen extends StatelessWidget {
           ],
         ),
       ),
-
       bottomNavigationBar: const Padding(
         padding: EdgeInsets.only(bottom: 10),
         child: _VibeBottomNavBar(selectedIndex: 0),
