@@ -60,7 +60,7 @@ class _MapScreenState extends State<MapScreen> {
 
   /// --- WEATHER CACHE ---
   final Map<String, WeatherInfo> _weatherByPlaceId = {};
-  final Set<String> _weatherLoading = {}; // aynı anda iki kez fetch olmasın
+  final Set<String> _weatherLoading = {};
 
   String get _mood => widget.mood ?? 'Happy';
 
@@ -71,8 +71,6 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   // ---------------- WEATHER HELPERS ----------------
-
-  /// Open-Meteo current weather (API key istemez)
   Future<WeatherInfo?> _fetchWeather(double lat, double lng) async {
     final uri = Uri.parse(
       'https://api.open-meteo.com/v1/forecast'
@@ -99,7 +97,6 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  /// place için cache’te yoksa getir
   Future<void> _ensureWeatherFor(Place place) async {
     if (_weatherByPlaceId.containsKey(place.id)) return;
     if (_weatherLoading.contains(place.id)) return;
@@ -119,7 +116,6 @@ class _MapScreenState extends State<MapScreen> {
     _weatherLoading.remove(place.id);
   }
 
-  /// Open-Meteo weather_code -> kısa açıklama
   String _weatherLabel(int code) {
     if (code == 0) return 'Clear';
     if (code == 1 || code == 2) return 'Partly Cloudy';
@@ -309,7 +305,6 @@ class _MapScreenState extends State<MapScreen> {
       if (_places.isNotEmpty) {
         _focusOnPlace(_places[_selectedIndex]);
 
-        // ✅ prefetch: ilk 8 yerin weather’ını getir (çok spam olmasın)
         final limit = min(8, _places.length);
         for (int i = 0; i < limit; i++) {
           _ensureWeatherFor(_places[i]);
@@ -444,6 +439,73 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  void _showMoodScores(BuildContext context, Place place) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0D4F8B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        final scores = place.moodScores.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                place.name,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Times New Roman',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              ...scores.map((e) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          e.key,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Times New Roman',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${e.value.toStringAsFixed(1)} / 10',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Times New Roman',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     const primaryBlue = Color(0xFF0D4F8B);
@@ -451,7 +513,6 @@ class _MapScreenState extends State<MapScreen> {
     final favorites = context.watch<FavoritesService>();
     final selectedPlace = _places.isEmpty ? null : _places[_selectedIndex];
 
-    // selected weather
     WeatherInfo? selectedWeather;
     if (selectedPlace != null) {
       selectedWeather = _weatherByPlaceId[selectedPlace.id];
@@ -778,10 +839,8 @@ class _MapScreenState extends State<MapScreen> {
                             final isFav = favorites.isFavorite(p.id);
                             final imgUrl = _photoUrl(p);
 
-                            // weather (yoksa fetch tetikle)
                             final w = _weatherByPlaceId[p.id];
                             if (w == null) {
-                              // list render edilirken de yavaş yavaş doldursun
                               _ensureWeatherFor(p);
                             }
                             final weatherMini = (w == null)
@@ -792,6 +851,7 @@ class _MapScreenState extends State<MapScreen> {
                               onTap: () {
                                 setState(() => _selectedIndex = i);
                                 _focusOnPlace(p);
+                                _showMoodScores(context, p);
                                 _ensureWeatherFor(p);
                               },
                               child: Container(
