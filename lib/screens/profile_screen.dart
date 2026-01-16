@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:vibescape_app/screens/login_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:vibescape_app/screens/visits_screen.dart';
+
 import '../services/favorites_service.dart';
 import '../services/stats_service.dart';
 
@@ -24,6 +25,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _appNotifications = true;
   bool _emailNotifications = false;
+
+  // ✅ Ekranda gösterilecek değerleri state’te tutuyoruz
+  int _discoveriesCount = 0;
+  int _myMoodsCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshStats(); // ✅ ekran açılır açılmaz oku
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ Bu ekran tekrar açıldığında / geri gelindiğinde de güncel sayıları çek
+    _refreshStats();
+  }
+
+  void _refreshStats() {
+    setState(() {
+      _discoveriesCount = StatsService.discoveriesCount;
+      _myMoodsCount = StatsService.myMoodsCount;
+    });
+  }
 
   Future<void> _pickImage() async {
     final XFile? pickedFile =
@@ -231,10 +256,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final favoritesService = context.watch<FavoritesService>();
     final savedCount = favoritesService.favorites.length;
 
-    // ✅ DOĞRU KAYNAK: StatsService
-    final discoveriesCount = StatsService.discoveriesCount;
-    final myMoodsCount = StatsService.myMoodsCount;
-
     return Scaffold(
       backgroundColor: blue,
       appBar: AppBar(
@@ -338,13 +359,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _ProfileStat(
-                      value: discoveriesCount.toString(),
+                      value: _discoveriesCount.toString(),
                       label: 'Discoveries',
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => const VisitsScreen()),
-                        );
+                        ).then((_) => _refreshStats()); // ✅ geri dönünce güncelle
                       },
                     ),
                     _ProfileStat(
@@ -358,7 +379,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
                     _ProfileStat(
-                      value: myMoodsCount.toString(),
+                      value: _myMoodsCount.toString(),
                       label: 'My Moods',
                       onTap: () => _openMoodsBreakdown(context),
                     ),

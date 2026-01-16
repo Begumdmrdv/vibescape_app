@@ -349,6 +349,7 @@ class _MapScreenState extends State<MapScreen> {
 
     await StatsService.incrementDiscoveries();
 
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Saved: ${_places[_selectedIndex].name}')),
     );
