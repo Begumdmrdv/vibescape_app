@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:vibescape_app/screens/login_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:vibescape_app/screens/visits_screen.dart';
-
 import '../services/favorites_service.dart';
 import '../services/stats_service.dart';
 
@@ -17,7 +16,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with WidgetsBindingObserver {
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
 
@@ -26,27 +26,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _appNotifications = true;
   bool _emailNotifications = false;
 
-  // ✅ Ekranda gösterilecek değerleri state’te tutuyoruz
   int _discoveriesCount = 0;
   int _myMoodsCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _refreshStats(); // ✅ ekran açılır açılmaz oku
+    WidgetsBinding.instance.addObserver(this);
+
+    _refreshStats();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // ✅ Bu ekran tekrar açıldığında / geri gelindiğinde de güncel sayıları çek
-    _refreshStats();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshStats();
+    });
   }
 
-  void _refreshStats() {
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshStats();
+    }
+  }
+
+  Future<void> _refreshStats() async {
+    final d = StatsService.discoveriesCount;
+    final m = StatsService.myMoodsCount;
+
+    if (!mounted) return;
+
     setState(() {
-      _discoveriesCount = StatsService.discoveriesCount;
-      _myMoodsCount = StatsService.myMoodsCount;
+      _discoveriesCount = d;
+      _myMoodsCount = m;
     });
   }
 
@@ -361,11 +382,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _ProfileStat(
                       value: _discoveriesCount.toString(),
                       label: 'Discoveries',
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        await Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const VisitsScreen()),
-                        ).then((_) => _refreshStats()); // ✅ geri dönünce güncelle
+                          MaterialPageRoute(
+                            builder: (_) => const VisitsScreen(),
+                          ),
+                        );
+                        _refreshStats();
                       },
                     ),
                     _ProfileStat(
@@ -374,7 +398,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const FavoritesScreen(),
+                          ),
                         );
                       },
                     ),
@@ -539,7 +565,8 @@ class MoodsBreakdownScreen extends StatelessWidget {
           ? const Center(
         child: Text(
           'No mood data yet.',
-          style: TextStyle(color: Colors.white, fontFamily: 'Times New Roman'),
+          style:
+          TextStyle(color: Colors.white, fontFamily: 'Times New Roman'),
         ),
       )
           : ListView.builder(
