@@ -1,17 +1,19 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vibescape_app/screens/profile_screen.dart';
 import 'package:vibescape_app/screens/favorites_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+
 import '../models/place.dart';
 import '../services/places_api_service.dart';
 import '../utils/mood_scoring.dart';
 import '../services/favorites_service.dart';
-import 'dart:math';
 import '../services/stats_service.dart';
-
-
 
 class MapScreen extends StatefulWidget {
   final String? mood;
@@ -25,12 +27,20 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
+/// --- WEATHER MODELLERİ ---
+class WeatherInfo {
+  final double tempC;
+  final int weatherCode;
+
+  WeatherInfo({required this.tempC, required this.weatherCode});
+}
+
 class _MapScreenState extends State<MapScreen> {
   final _placesApi =
   PlacesApiService('AIzaSyCRWOtfsyFdobFs6h79dXyBhYb4fhoC8hc');
 
   static const CameraPosition _initialCameraPosition = CameraPosition(
-    target: LatLng(41.015137, 28.979530), // Istanbul
+    target: LatLng(41.015137, 28.979530),
     zoom: 12,
   );
 
@@ -48,13 +58,82 @@ class _MapScreenState extends State<MapScreen> {
   List<Place> _places = [];
   int _selectedIndex = 0;
 
+  /// --- WEATHER CACHE ---
+  final Map<String, WeatherInfo> _weatherByPlaceId = {};
+  final Set<String> _weatherLoading = {}; // aynı anda iki kez fetch olmasın
+
+  String get _mood => widget.mood ?? 'Happy';
+
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
   }
 
-  String get _mood => widget.mood ?? 'Happy';
+  // ---------------- WEATHER HELPERS ----------------
+
+  /// Open-Meteo current weather (API key istemez)
+  Future<WeatherInfo?> _fetchWeather(double lat, double lng) async {
+    final uri = Uri.parse(
+      'https://api.open-meteo.com/v1/forecast'
+          '?latitude=$lat&longitude=$lng'
+          '&current=temperature_2m,weather_code'
+          '&timezone=auto',
+    );
+
+    try {
+      final res = await http.get(uri);
+      if (res.statusCode != 200) return null;
+
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final current = data['current'] as Map<String, dynamic>?;
+
+      if (current == null) return null;
+
+      final temp = (current['temperature_2m'] as num).toDouble();
+      final code = (current['weather_code'] as num).toInt();
+
+      return WeatherInfo(tempC: temp, weatherCode: code);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// place için cache’te yoksa getir
+  Future<void> _ensureWeatherFor(Place place) async {
+    if (_weatherByPlaceId.containsKey(place.id)) return;
+    if (_weatherLoading.contains(place.id)) return;
+
+    _weatherLoading.add(place.id);
+
+    final info = await _fetchWeather(place.lat, place.lng);
+
+    if (!mounted) return;
+
+    if (info != null) {
+      setState(() {
+        _weatherByPlaceId[place.id] = info;
+      });
+    }
+
+    _weatherLoading.remove(place.id);
+  }
+
+  /// Open-Meteo weather_code -> kısa açıklama
+  String _weatherLabel(int code) {
+    if (code == 0) return 'Clear';
+    if (code == 1 || code == 2) return 'Partly Cloudy';
+    if (code == 3) return 'Cloudy';
+    if (code == 45 || code == 48) return 'Fog';
+    if (code >= 51 && code <= 57) return 'Drizzle';
+    if (code >= 61 && code <= 67) return 'Rain';
+    if (code >= 71 && code <= 77) return 'Snow';
+    if (code >= 80 && code <= 82) return 'Showers';
+    if (code >= 95) return 'Thunderstorm';
+    return 'Unknown';
+  }
+
+  // ---------------- LOCATION + PLACES ----------------
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
@@ -150,7 +229,6 @@ class _MapScreenState extends State<MapScreen> {
 
       for (final p in raw) {
         final types = List<String>.from(p['types'] ?? []);
-
         if (isFoodPlace(types)) continue;
 
         final lat = p['lat'] as double;
@@ -215,6 +293,7 @@ class _MapScreenState extends State<MapScreen> {
               setState(() {
                 _selectedIndex = i;
               });
+              _ensureWeatherFor(place);
             },
           ),
         );
@@ -229,6 +308,12 @@ class _MapScreenState extends State<MapScreen> {
 
       if (_places.isNotEmpty) {
         _focusOnPlace(_places[_selectedIndex]);
+
+        // ✅ prefetch: ilk 8 yerin weather’ını getir (çok spam olmasın)
+        final limit = min(8, _places.length);
+        for (int i = 0; i < limit; i++) {
+          _ensureWeatherFor(_places[i]);
+        }
       }
     } catch (e) {
       setState(() {
@@ -242,7 +327,6 @@ class _MapScreenState extends State<MapScreen> {
     if (p.photoRef == null || p.photoRef!.isEmpty) return null;
     return _placesApi.placePhotoUrl(photoRef: p.photoRef!, maxWidth: maxWidth);
   }
-
 
   void _focusOnPlace(Place p) {
     _mapController?.animateCamera(
@@ -341,17 +425,22 @@ class _MapScreenState extends State<MapScreen> {
       _selectedIndex = newIndex;
     });
 
-    _focusOnPlace(_places[_selectedIndex]);
+    final p = _places[_selectedIndex];
+    _focusOnPlace(p);
+    _ensureWeatherFor(p);
   }
 
   void _saveSelected() async {
     if (_places.isEmpty) return;
 
-    await StatsService.incrementDiscoveries();
-
+    await StatsService.setDiscoveries(
+      StatsService.discoveriesCount + 1,
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Saved: ${_places[_selectedIndex].name}')),
+      SnackBar(
+        content: Text('Saved: ${_places[_selectedIndex].name}'),
+      ),
     );
   }
 
@@ -360,8 +449,13 @@ class _MapScreenState extends State<MapScreen> {
     const primaryBlue = Color(0xFF0D4F8B);
 
     final favorites = context.watch<FavoritesService>();
-
     final selectedPlace = _places.isEmpty ? null : _places[_selectedIndex];
+
+    // selected weather
+    WeatherInfo? selectedWeather;
+    if (selectedPlace != null) {
+      selectedWeather = _weatherByPlaceId[selectedPlace.id];
+    }
 
     return Scaffold(
       backgroundColor: primaryBlue,
@@ -398,7 +492,7 @@ class _MapScreenState extends State<MapScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
                 );
               },
               child: Container(
@@ -521,15 +615,22 @@ class _MapScreenState extends State<MapScreen> {
                             final imgUrl = _photoUrl(place, maxWidth: 600);
                             final moodScore =
                             (place.moodScores[_mood] ?? 0).toStringAsFixed(1);
-                            final google = place.googleRating?.toStringAsFixed(1) ?? '-';
+                            final google =
+                                place.googleRating?.toStringAsFixed(1) ?? '-';
                             final distKm = place.distanceKm.toStringAsFixed(1);
                             final isFav = favorites.isFavorite(place.id);
+
+                            final w = selectedWeather;
+                            final weatherText = (w == null)
+                                ? 'Weather: loading...'
+                                : 'Weather: ${w.tempC.toStringAsFixed(0)}°C • ${_weatherLabel(w.weatherCode)}';
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: primaryBlue,
                                     borderRadius: BorderRadius.circular(999),
@@ -546,7 +647,6 @@ class _MapScreenState extends State<MapScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -558,15 +658,18 @@ class _MapScreenState extends State<MapScreen> {
                                         child: imgUrl == null
                                             ? Container(
                                           color: Colors.black12,
-                                          child: const Icon(Icons.photo, color: Colors.black45),
+                                          child: const Icon(Icons.photo,
+                                              color: Colors.black45),
                                         )
                                             : Image.network(
                                           imgUrl,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stack) {
+                                          errorBuilder:
+                                              (context, error, stack) {
                                             return Container(
                                               color: Colors.black12,
-                                              child: const Icon(Icons.broken_image,
+                                              child: const Icon(
+                                                  Icons.broken_image,
                                                   color: Colors.black45),
                                             );
                                           },
@@ -574,10 +677,10 @@ class _MapScreenState extends State<MapScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             place.name,
@@ -605,9 +708,12 @@ class _MapScreenState extends State<MapScreen> {
                                           Wrap(
                                             spacing: 10,
                                             runSpacing: 6,
-                                            crossAxisAlignment: WrapCrossAlignment.center,
+                                            crossAxisAlignment:
+                                            WrapCrossAlignment.center,
                                             children: [
-                                              const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF0D4F8B)),
+                                              const Icon(Icons.auto_awesome,
+                                                  size: 16,
+                                                  color: Color(0xFF0D4F8B)),
                                               Text(
                                                 'Mood: $moodScore/10',
                                                 style: const TextStyle(
@@ -625,24 +731,34 @@ class _MapScreenState extends State<MapScreen> {
                                               ),
                                             ],
                                           ),
-
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            weatherText,
+                                            style: const TextStyle(
+                                              fontFamily: 'Times New Roman',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF0D4F8B),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
-
                                     SizedBox(
                                       width: 44,
                                       height: 44,
                                       child: IconButton(
                                         padding: EdgeInsets.zero,
-                                        onPressed: () => favorites.toggleFavorite(place),
+                                        onPressed: () =>
+                                            favorites.toggleFavorite(place),
                                         icon: Icon(
-                                          isFav ? Icons.favorite : Icons.favorite_border,
+                                          isFav
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
                                           color: Colors.redAccent,
                                         ),
                                       ),
                                     ),
-
                                   ],
                                 ),
                               ],
@@ -662,10 +778,21 @@ class _MapScreenState extends State<MapScreen> {
                             final isFav = favorites.isFavorite(p.id);
                             final imgUrl = _photoUrl(p);
 
+                            // weather (yoksa fetch tetikle)
+                            final w = _weatherByPlaceId[p.id];
+                            if (w == null) {
+                              // list render edilirken de yavaş yavaş doldursun
+                              _ensureWeatherFor(p);
+                            }
+                            final weatherMini = (w == null)
+                                ? 'Weather: ...'
+                                : '${w.tempC.toStringAsFixed(0)}°C • ${_weatherLabel(w.weatherCode)}';
+
                             return GestureDetector(
                               onTap: () {
                                 setState(() => _selectedIndex = i);
                                 _focusOnPlace(p);
+                                _ensureWeatherFor(p);
                               },
                               child: Container(
                                 margin: const EdgeInsets.only(bottom: 10),
@@ -676,12 +803,12 @@ class _MapScreenState extends State<MapScreen> {
                                       : Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                   border: isSelected
-                                      ? Border.all(color: primaryBlue, width: 2)
+                                      ? Border.all(
+                                      color: primaryBlue, width: 2)
                                       : null,
                                 ),
                                 child: Row(
                                   children: [
-
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
                                       child: SizedBox(
@@ -690,19 +817,28 @@ class _MapScreenState extends State<MapScreen> {
                                         child: imgUrl == null
                                             ? Container(
                                           color: Colors.black12,
-                                          child: const Icon(Icons.photo, color: Colors.black45),
+                                          child: const Icon(Icons.photo,
+                                              color: Colors.black45),
                                         )
                                             : Image.network(
                                           imgUrl,
                                           fit: BoxFit.cover,
-                                          loadingBuilder: (context, child, progress) {
-                                            if (progress == null) return child;
-                                            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                                          loadingBuilder:
+                                              (context, child, progress) {
+                                            if (progress == null)
+                                              return child;
+                                            return const Center(
+                                                child:
+                                                CircularProgressIndicator(
+                                                    strokeWidth: 2));
                                           },
-                                          errorBuilder: (context, error, stack) {
+                                          errorBuilder:
+                                              (context, error, stack) {
                                             return Container(
                                               color: Colors.black12,
-                                              child: const Icon(Icons.broken_image, color: Colors.black45),
+                                              child: const Icon(
+                                                  Icons.broken_image,
+                                                  color: Colors.black45),
                                             );
                                           },
                                         ),
@@ -711,15 +847,34 @@ class _MapScreenState extends State<MapScreen> {
                                     const SizedBox(width: 12),
 
                                     Expanded(
-                                      child: Text(
-                                        p.name,
-                                        style: const TextStyle(
-                                          fontFamily: 'Times New Roman',
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            p.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontFamily: 'Times New Roman',
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            weatherMini,
+                                            style: const TextStyle(
+                                              fontFamily: 'Times New Roman',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: primaryBlue,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
+
                                     Text(
                                       '$score/10',
                                       style: const TextStyle(
@@ -730,7 +885,6 @@ class _MapScreenState extends State<MapScreen> {
                                     ),
                                     const SizedBox(width: 8),
 
-                                    // Favori butonu
                                     IconButton(
                                       onPressed: () {
                                         favorites.toggleFavorite(p);
